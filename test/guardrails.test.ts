@@ -142,6 +142,10 @@ describe("output filter", () => {
     expect(text).not.toContain("LP-1003");
     expect(redactions).toHaveLength(2);
   });
+  it("treats fullwidth digits the customer typed as typed", () => {
+    s.customerText = "cancel LP-１００３";
+    expect(filterReply(s, "I can't act on LP-1003.").redactions).toHaveLength(0);
+  });
   it("does not redact identifiers the customer typed", () => {
     s.customerText = "is LP-1003 mine?";
     expect(filterReply(s, "I can't share details about LP-1003.").redactions).toHaveLength(0);

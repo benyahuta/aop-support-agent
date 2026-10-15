@@ -133,8 +133,10 @@ const digits = (x: string) => x.replace(/\D/g, "");
  */
 export function filterReply(session: Session, text: string): { text: string; redactions: string[] } {
   const w = session.world;
-  const typed = session.customerText.toLowerCase();
-  const typedDigits = digits(session.customerText);
+  // NFKC folds lookalikes such as fullwidth digits, so "LP-１００３" typed by the customer counts as typed.
+  const customerText = session.customerText.normalize("NFKC");
+  const typed = customerText.toLowerCase();
+  const typedDigits = digits(customerText);
   const me = session.verifiedCustomerId;
   const others = (w.db.prepare("SELECT id, name, email, phone FROM customers").all() as Array<{ id: string; name: string; email: string; phone: string }>).filter((c) => c.id !== me);
   const ownOrders = new Set(me ? w.ordersFor(me).map((o) => o.id) : []);
