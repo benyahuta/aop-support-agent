@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Larkspur &amp; Pine Support Agent</title>
+  <meta name="description" content="An AOP-driven customer support agent with code-enforced guardrails, human handoff, and a live ops trace." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">▲</span>
+      <div>
+        <strong>Larkspur &amp; Pine</strong>
+        <span class="sub">Support agent demo · fictional store</span>
+      </div>
+    </div>
+    <div class="meta" id="meta"></div>
+    <a class="gh" href="https://github.com/benyahuta/support-agent" target="_blank" rel="noopener">GitHub</a>
+  </header>
+
+  <main class="layout">
+    <section class="panel chat" aria-label="Customer chat">
+      <div class="panel-head">
+        <h2>Customer view</h2>
+        <button id="new-conv" class="ghost">New conversation</button>
+      </div>
+      <div id="messages" class="messages" aria-live="polite"></div>
+      <form id="composer" class="composer">
+        <input id="input" autocomplete="off" maxlength="1000" placeholder="Message Larkspur &amp; Pine support…" />
+        <button type="submit" id="send">Send</button>
+      </form>
+      <details class="accounts" open>
+        <summary>Demo accounts <span class="muted">(all fictional; click to copy into the chat)</span></summary>
+        <div id="accounts" class="account-list"></div>
+      </details>
+    </section>
+
+    <section class="panel ops" aria-label="Ops view">
+      <div class="panel-head">
+        <h2>Ops view</h2>
+        <div class="tabs" role="tablist">
+          <button role="tab" data-tab="trace" class="active">Trace</button>
+          <button role="tab" data-tab="backend">Backend</button>
+          <button role="tab" data-tab="aops">AOPs</button>
+        </div>
+      </div>
+      <div class="state" id="state"></div>
+      <div class="tab-body" id="tab-trace"><ol id="trace" class="trace"></ol></div>
+      <div class="tab-body hidden" id="tab-backend"></div>
+      <div class="tab-body hidden" id="tab-aops"></div>
+    </section>
+  </main>
+  <script src="app.js" type="module"></script>
+</body>
+</html>

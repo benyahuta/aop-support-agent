@@ -1,0 +1,32 @@
+{
+  "name": "larkspur-support-agent",
+  "version": "1.0.0",
+  "description": "AOP-driven customer support agent with an eval harness",
+  "scripts": {
+    "dev": "node --env-file-if-exists=.env --watch src/server.ts",
+    "start": "node src/server.ts",
+    "test": "vitest run",
+    "typecheck": "tsc",
+    "eval": "node --env-file-if-exists=.env evals/run.ts",
+    "eval:compare": "node evals/compare.ts",
+    "aop:compile": "node src/aop/cli.ts"
+  },
+  "author": "",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.134.0",
+    "@hono/node-server": "^2.1.5",
+    "hono": "^4.13.13",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=24"
+  }
+}
