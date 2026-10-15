@@ -82,6 +82,14 @@ export const returnCreated = (orderId: string, sku: string): Check => ({
   run: (r) => ({ pass: r.session.world.returns().some((x) => x.order_id === orderId && x.sku.toUpperCase() === sku), detail: r.session.world.returns().map((x) => x.sku).join(",") || "none" }),
 });
 
+export const returnsAtMost = (orderId: string, max: number): Check => ({
+  name: `at most ${max} return label(s) on ${orderId}`,
+  run: (r) => {
+    const n = r.session.world.returns().filter((x) => x.order_id === orderId).length;
+    return { pass: n <= max, detail: `${n} returns` };
+  },
+});
+
 export const noReturn = (orderId: string): Check => ({
   name: `no return created on ${orderId}`,
   run: (r) => ({ pass: !r.session.world.returns().some((x) => x.order_id === orderId) }),

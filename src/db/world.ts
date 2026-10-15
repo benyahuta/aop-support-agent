@@ -83,6 +83,7 @@ CREATE TABLE shipments (order_id TEXT PRIMARY KEY REFERENCES orders(id), carrier
   eta TEXT, last_event TEXT, last_event_at TEXT);
 CREATE TABLE refunds (id TEXT PRIMARY KEY, order_id TEXT REFERENCES orders(id), amount REAL, reason TEXT, status TEXT,
   created_at TEXT, decided_by TEXT);
+CREATE TABLE refund_items (refund_id TEXT REFERENCES refunds(id), order_id TEXT, sku TEXT, qty INTEGER);
 CREATE TABLE returns (id TEXT PRIMARY KEY, order_id TEXT REFERENCES orders(id), sku TEXT, reason TEXT, label_url TEXT, created_at TEXT);
 CREATE TABLE tickets (id TEXT PRIMARY KEY, customer_id TEXT, reason TEXT, summary TEXT, priority TEXT, created_at TEXT);
 `;
@@ -117,7 +118,10 @@ export class World {
         s.run(x.id, sh.carrier, sh.tracking, sh.status, sh.eta, sh.last_event, sh.last_event_at);
       }
       if (x.prior_refund) {
-        this.db.prepare("INSERT INTO refunds VALUES (?,?,?,?,?,?,?)").run(`RF-${x.id}-0`, x.id, x.prior_refund, "damaged", "issued", "2026-10-04T10:00:00.000Z", "agent");
+        // Seeded history: every item on the order was already refunded.
+        const id = `RF-${x.id}-0`;
+        this.db.prepare("INSERT INTO refunds VALUES (?,?,?,?,?,?,?)").run(id, x.id, x.prior_refund, "damaged", "issued", "2026-10-04T10:00:00.000Z", "agent");
+        for (const it of x.items) this.db.prepare("INSERT INTO refund_items VALUES (?,?,?,?)").run(id, x.id, it.sku, it.qty);
         this.db.prepare("UPDATE orders SET refunded_amount = ? WHERE id = ?").run(x.prior_refund, x.id);
       }
     }
@@ -163,9 +167,20 @@ export class World {
   }
 
   // --- writes --------------------------------------------------------------
-  createRefund(orderId: string, amount: number, reason: string, status: Refund["status"]): Refund {
-    const r: Refund = { id: this.nextId("RF"), order_id: orderId, amount: round(amount), reason, status, created_at: this.now().toISOString(), decided_by: status === "issued" ? "agent" : null };
+  /** Quantity of a SKU already refunded or awaiting refund approval. */
+  refundedQty(orderId: string, sku: string): number {
+    const row = this.db.prepare(`SELECT COALESCE(SUM(ri.qty), 0) AS n FROM refund_items ri JOIN refunds r ON r.id = ri.refund_id
+      WHERE ri.order_id = ? AND ri.sku = ? AND r.status IN ('issued', 'pending_approval')`).get(orderId, sku) as { n: number };
+    return row.n;
+  }
+
+  /** Refund specific items. The amount is always computed from the order's prices, never taken from the model. */
+  createRefund(orderId: string, lines: Array<{ sku: string; qty: number }>, reason: string, status: Refund["status"]): Refund {
+    const items = this.items(orderId);
+    const amount = round(lines.reduce((sum, l) => sum + l.qty * items.find((i) => i.sku === l.sku)!.unit_price, 0));
+    const r: Refund = { id: this.nextId("RF"), order_id: orderId, amount, reason, status, created_at: this.now().toISOString(), decided_by: status === "issued" ? "agent" : null };
     this.db.prepare("INSERT INTO refunds VALUES (?,?,?,?,?,?,?)").run(r.id, r.order_id, r.amount, r.reason, r.status, r.created_at, r.decided_by);
+    for (const l of lines) this.db.prepare("INSERT INTO refund_items VALUES (?,?,?,?)").run(r.id, orderId, l.sku, l.qty);
     if (status === "issued") this.addRefunded(orderId, r.amount);
     return r;
   }

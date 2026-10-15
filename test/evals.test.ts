@@ -25,7 +25,7 @@ describe("deterministic checks", () => {
   it("score backend state, ignoring seeded prior refunds", () => {
     const session = newSession("chk");
     session.verifiedCustomerId = "C-001";
-    execute(session, "issue_refund", { order_id: "LP-1001", amount: 24, reason: "damaged", description: "" });
+    execute(session, "issue_refund", { order_id: "LP-1001", items: [{ sku: "CMP-MUG-12", qty: 1 }], reason: "damaged", description: "" });
     const r = { session, replies: ["Refunded $24 to your card."], transcript: [] };
     expect(c.refundIssued("LP-1001", 24).run(r).pass).toBe(true);
     expect(c.refundsAtMost("LP-1001", 10).run(r).pass).toBe(false);

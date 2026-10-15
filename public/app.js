@@ -121,12 +121,12 @@ function renderTrace() {
 
 function renderBackend() {
   const b = conv.backend;
-  const refunds = b.refunds.map((r) => `<tr><td>${esc(r.id)}</td><td>${esc(r.order_id)}</td><td>$${r.amount.toFixed(2)}</td><td>${esc(r.reason)}</td><td>${esc(r.status)}${r.status === "pending_approval" ? `<br><button class="approve" data-refund="${esc(r.id)}" data-d="approve">Approve</button><button class="deny" data-refund="${esc(r.id)}" data-d="deny">Deny</button>` : ""}</td><td>${esc(r.decided_by ?? "")}</td></tr>`).join("");
+  const refunds = b.refunds.map((r) => `<tr><td>${esc(r.id)}</td><td>${esc(r.order_id)}</td><td>$${r.amount.toFixed(2)}</td><td>${esc(r.reason)}</td><td>${esc(r.status)}${r.status === "pending_approval" && meta.ops_approval ? `<br><button class="approve" data-refund="${esc(r.id)}" data-d="approve">Approve</button><button class="deny" data-refund="${esc(r.id)}" data-d="deny">Deny</button>` : ""}</td><td>${esc(r.decided_by ?? "")}</td></tr>`).join("");
   const returns = b.returns.map((r) => `<tr><td>${esc(r.id)}</td><td>${esc(r.order_id)}</td><td>${esc(r.sku)}</td><td>${esc(r.reason)}</td></tr>`).join("");
   const tickets = b.tickets.map((t) => `<tr><td>${esc(t.id)}</td><td>${esc(t.reason)}</td><td>${esc(t.priority)}</td><td>${esc(t.summary)}</td></tr>`).join("");
   $("#tab-backend").innerHTML = `
     <p class="muted">Each conversation runs against its own freshly seeded copy of the store backend.</p>
-    <h3>Refunds</h3><table><tr><th>ID</th><th>Order</th><th>Amount</th><th>Reason</th><th>Status</th><th>Decided by</th></tr>${refunds || `<tr><td colspan=6 class="muted">none</td></tr>`}</table>
+    <h3>Refunds</h3>${b.refunds.some((r) => r.status === "pending_approval") ? `<p class="muted">Simulated ops: approve or deny as the human specialist would.</p>` : ""}<table><tr><th>ID</th><th>Order</th><th>Amount</th><th>Reason</th><th>Status</th><th>Decided by</th></tr>${refunds || `<tr><td colspan=6 class="muted">none</td></tr>`}</table>
     <h3>Returns</h3><table><tr><th>ID</th><th>Order</th><th>SKU</th><th>Reason</th></tr>${returns || `<tr><td colspan=4 class="muted">none</td></tr>`}</table>
     <h3>Handoff tickets</h3><table><tr><th>ID</th><th>Reason</th><th>Priority</th><th>Summary</th></tr>${tickets || `<tr><td colspan=4 class="muted">none</td></tr>`}</table>`;
   for (const btn of document.querySelectorAll("[data-refund]")) btn.onclick = () => decide(btn.dataset.refund, btn.dataset.d);

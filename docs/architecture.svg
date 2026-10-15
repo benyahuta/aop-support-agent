@@ -1,0 +1,150 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 575" width="1000" height="575" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#5b6472"/>
+    </marker>
+  </defs>
+  <style>
+    .t { font-size: 14px; font-weight: 600; fill: #1f2933; }
+    .s { font-size: 13px; fill: #4a5361; }
+    .e { font-size: 12px; fill: #5b6472; }
+    .ln { stroke: #5b6472; stroke-width: 1.4; fill: none; }
+    .dash { stroke-dasharray: 5 4; }
+    .client { fill: #eef2f7; stroke: #94a3b8; }
+    .server { fill: #f4f5f7; stroke: #9aa3ad; }
+    .agent { fill: #e8f0fb; stroke: #6f8fbf; }
+    .model { fill: #f2eef9; stroke: #9886c2; }
+    .guard { fill: #fbf1e7; stroke: #c99467; }
+    .data { fill: #ebf5ee; stroke: #7da889; }
+    .aop { fill: #f6f3e6; stroke: #b3a46a; }
+  </style>
+
+  <rect x="0" y="0" width="1000" height="575" fill="#ffffff"/>
+
+  <!-- Section label -->
+  <text x="20" y="28" class="e" font-weight="600" letter-spacing="0.5">RUNTIME (one conversation turn)</text>
+
+  <!-- Column 1: clients -->
+  <rect x="20" y="110" width="160" height="56" rx="8" class="client"/>
+  <text x="100" y="134" text-anchor="middle" class="t">Customer chat UI</text>
+  <text x="100" y="153" text-anchor="middle" class="s">public/index.html</text>
+
+  <rect x="20" y="276" width="160" height="76" rx="8" class="client"/>
+  <text x="100" y="299" text-anchor="middle" class="t">Ops view</text>
+  <text x="100" y="318" text-anchor="middle" class="s">trace, backend, AOPs</text>
+  <text x="100" y="336" text-anchor="middle" class="s">refund approvals</text>
+
+  <!-- Column 2: server -->
+  <rect x="220" y="100" width="180" height="252" rx="8" class="server"/>
+  <text x="310" y="126" text-anchor="middle" class="t">Hono server</text>
+  <text x="310" y="146" text-anchor="middle" class="s">rate limits</text>
+  <text x="310" y="164" text-anchor="middle" class="s">per-conversation sessions</text>
+
+  <!-- Column 3: agent -->
+  <rect x="460" y="20" width="210" height="56" rx="8" class="model"/>
+  <text x="565" y="44" text-anchor="middle" class="t">Claude Messages API</text>
+  <text x="565" y="63" text-anchor="middle" class="s">caching · effort · fallback</text>
+
+  <rect x="460" y="110" width="210" height="72" rx="8" class="agent"/>
+  <text x="565" y="134" text-anchor="middle" class="t">SupportAgent</text>
+  <text x="565" y="153" text-anchor="middle" class="s">manual tool-use loop</text>
+  <text x="565" y="171" text-anchor="middle" class="s">aop_step on every action</text>
+
+  <rect x="460" y="212" width="210" height="52" rx="8" class="guard"/>
+  <text x="565" y="234" text-anchor="middle" class="t">Output PII filter</text>
+  <text x="565" y="252" text-anchor="middle" class="s">filterReply</text>
+
+  <rect x="460" y="292" width="210" height="52" rx="8" class="server"/>
+  <text x="565" y="314" text-anchor="middle" class="t">Trace</text>
+  <text x="565" y="332" text-anchor="middle" class="s">events + token/cost usage</text>
+
+  <!-- Column 4: AOPs, guardrails, tools, world -->
+  <rect x="720" y="20" width="260" height="56" rx="8" class="aop"/>
+  <text x="850" y="44" text-anchor="middle" class="t">AOP compiler</text>
+  <text x="850" y="63" text-anchor="middle" class="s">aops/*.md → validated procedures</text>
+
+  <rect x="720" y="110" width="260" height="72" rx="8" class="guard"/>
+  <text x="850" y="134" text-anchor="middle" class="t">Guardrails (policy as code)</text>
+  <text x="850" y="153" text-anchor="middle" class="s">checkToolCall</text>
+  <text x="850" y="171" text-anchor="middle" class="s">allow / block / require_approval</text>
+
+  <rect x="720" y="206" width="260" height="52" rx="8" class="agent"/>
+  <text x="850" y="228" text-anchor="middle" class="t">Tool executors</text>
+  <text x="850" y="246" text-anchor="middle" class="s">11 tools, zod-validated input</text>
+
+  <rect x="720" y="284" width="260" height="60" rx="8" class="data"/>
+  <text x="850" y="308" text-anchor="middle" class="t">Per-conversation SQLite World</text>
+  <text x="850" y="327" text-anchor="middle" class="s">node:sqlite in memory, fixed clock</text>
+
+  <!-- Runtime arrows -->
+  <line x1="180" y1="138" x2="220" y2="138" class="ln" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+  <line x1="180" y1="314" x2="220" y2="314" class="ln" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+
+  <line x1="400" y1="146" x2="460" y2="146" class="ln" marker-end="url(#arrow)"/>
+  <text x="430" y="139" text-anchor="middle" class="e">message</text>
+
+  <line x1="460" y1="238" x2="400" y2="238" class="ln" marker-end="url(#arrow)"/>
+  <text x="430" y="231" text-anchor="middle" class="e">reply</text>
+
+  <line x1="460" y1="318" x2="400" y2="318" class="ln" marker-end="url(#arrow)"/>
+  <text x="430" y="311" text-anchor="middle" class="e">trace</text>
+
+  <line x1="565" y1="76" x2="565" y2="110" class="ln" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+
+  <path d="M670,118 L695,118 L695,58 L720,58" class="ln" marker-end="url(#arrow)"/>
+  <text x="693" y="98" text-anchor="end" class="e">load</text>
+
+  <line x1="670" y1="146" x2="720" y2="146" class="ln" marker-end="url(#arrow)"/>
+
+  <line x1="850" y1="182" x2="850" y2="206" class="ln" marker-end="url(#arrow)"/>
+  <line x1="850" y1="258" x2="850" y2="284" class="ln" marker-end="url(#arrow)"/>
+
+  <path d="M720,232 L695,232 L695,172 L670,172" class="ln dash" marker-end="url(#arrow)"/>
+  <text x="0" y="0" transform="translate(689,202) rotate(-90)" text-anchor="middle" class="e">result</text>
+
+  <line x1="565" y1="182" x2="565" y2="212" class="ln" marker-end="url(#arrow)"/>
+  <line x1="565" y1="264" x2="565" y2="292" class="ln dash"/>
+
+  <!-- Divider -->
+  <line x1="20" y1="378" x2="980" y2="378" stroke="#d5d9df" stroke-width="1"/>
+
+  <!-- Eval harness -->
+  <rect x="20" y="392" width="960" height="168" rx="10" fill="#fafbfc" stroke="#c3c9d1" stroke-dasharray="6 4"/>
+  <text x="36" y="415" class="e" font-weight="600" letter-spacing="0.5">EVAL HARNESS (npm run eval)</text>
+
+  <rect x="36" y="440" width="154" height="76" rx="8" class="aop"/>
+  <text x="113" y="463" text-anchor="middle" class="t">Scenarios</text>
+  <text x="113" y="482" text-anchor="middle" class="s">38 scenarios</text>
+  <text x="113" y="500" text-anchor="middle" class="s">scripted or persona</text>
+
+  <rect x="220" y="440" width="160" height="76" rx="8" class="model"/>
+  <text x="300" y="463" text-anchor="middle" class="t">Customer simulator</text>
+  <text x="300" y="482" text-anchor="middle" class="s">Haiku 5.5</text>
+  <text x="300" y="500" text-anchor="middle" class="s">structured output</text>
+
+  <rect x="410" y="440" width="160" height="76" rx="8" class="agent"/>
+  <text x="490" y="463" text-anchor="middle" class="t">SupportAgent</text>
+  <text x="490" y="482" text-anchor="middle" class="s">fresh session</text>
+  <text x="490" y="500" text-anchor="middle" class="s">fresh World</text>
+
+  <rect x="600" y="426" width="180" height="50" rx="8" class="data"/>
+  <text x="690" y="447" text-anchor="middle" class="t">Deterministic checks</text>
+  <text x="690" y="465" text-anchor="middle" class="s">backend state + trace</text>
+
+  <rect x="600" y="490" width="180" height="50" rx="8" class="model"/>
+  <text x="690" y="511" text-anchor="middle" class="t">LLM judge</text>
+  <text x="690" y="529" text-anchor="middle" class="s">Sonnet 5.5, rubric</text>
+
+  <rect x="810" y="426" width="154" height="114" rx="8" class="server"/>
+  <text x="887" y="452" text-anchor="middle" class="t">Results</text>
+  <text x="887" y="474" text-anchor="middle" class="s">report.md</text>
+  <text x="887" y="493" text-anchor="middle" class="s">history.jsonl</text>
+  <text x="887" y="512" text-anchor="middle" class="s">eval:compare</text>
+
+  <line x1="190" y1="478" x2="220" y2="478" class="ln" marker-end="url(#arrow)"/>
+  <line x1="380" y1="478" x2="410" y2="478" class="ln" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+  <path d="M570,466 L585,466 L585,451 L600,451" class="ln" marker-end="url(#arrow)"/>
+  <path d="M570,490 L585,490 L585,515 L600,515" class="ln" marker-end="url(#arrow)"/>
+  <line x1="780" y1="451" x2="810" y2="451" class="ln" marker-end="url(#arrow)"/>
+  <line x1="780" y1="515" x2="810" y2="515" class="ln" marker-end="url(#arrow)"/>
+</svg>

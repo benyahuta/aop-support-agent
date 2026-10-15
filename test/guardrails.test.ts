@@ -53,50 +53,62 @@ describe("identity and ownership", () => {
     for (let i = 0; i < 3; i++) execute(s, "verify_identity", { email: "x@example.com", order_id: "LP-1001" });
     expect(rule("verify_identity", { email: "maya.chen@example.com", order_id: "LP-1001" })).toBe("verification_lockout");
   });
-  it("requires a lookup before mutating an order", () => {
+  it("requires a lookup, then confirmation in a later turn, before cancelling", () => {
     as("jordan.alvarez@example.com", "LP-1003", "cancel_order");
     expect(rule("cancel_order", { order_id: "LP-1003" })).toBe("lookup_before_action");
     execute(s, "lookup_order", { order_id: "LP-1003" });
+    expect(rule("cancel_order", { order_id: "LP-1003" })).toBe("confirm_before_action");
+    s.turn += 1; // customer replied "yes"
     expect(rule("cancel_order", { order_id: "LP-1003" })).toBe("allow");
   });
 });
+
+const MUG = { sku: "CMP-MUG-12", qty: 1 };
+const JACKET = { sku: "ALD-DJ-M", qty: 1 };
+const refund = (order_id: string, items: Array<{ sku: string; qty: number }>, reason = "damaged") => ({ order_id, items, reason, description: "x" });
 
 describe("refund policy", () => {
   beforeEach(() => {
     as("maya.chen@example.com", "LP-1001", "refund_request");
     execute(s, "lookup_order", { order_id: "LP-1001" });
   });
-  it("allows a small damaged-item refund", () => {
-    expect(rule("issue_refund", { order_id: "LP-1001", amount: 24, reason: "damaged" })).toBe("allow");
+  it("allows a small damaged-item refund and computes the amount from the order", () => {
+    expect(rule("issue_refund", refund("LP-1001", [MUG]))).toBe("allow");
+    expect(execute(s, "issue_refund", refund("LP-1001", [MUG]))).toMatchObject({ status: "issued", amount: 24 });
   });
   it("routes refunds over the automatic limit to human approval", () => {
-    expect(check("issue_refund", { order_id: "LP-1001", amount: 229, reason: "defective" })).toMatchObject({ decision: "require_approval", rule: "refund_auto_limit" });
+    expect(check("issue_refund", refund("LP-1001", [JACKET], "defective"))).toMatchObject({ decision: "require_approval", rule: "refund_auto_limit" });
   });
-  it("blocks refunding more than was paid", () => {
-    expect(rule("issue_refund", { order_id: "LP-1001", amount: 500, reason: "damaged" })).toBe("refund_exceeds_paid");
+  it("blocks refunding more units than were bought, or an item not on the order", () => {
+    expect(rule("issue_refund", refund("LP-1001", [{ sku: "CMP-MUG-12", qty: 3 }]))).toBe("refund_exceeds_purchased");
+    expect(rule("issue_refund", refund("LP-1001", [{ sku: "RDG-2P", qty: 1 }]))).toBe("refund_unknown_item");
+  });
+  it("never refunds the same unit twice", () => {
+    execute(s, "issue_refund", refund("LP-1001", [MUG]));
+    expect(rule("issue_refund", refund("LP-1001", [{ sku: "cmp-mug-12", qty: 1 }]))).toBe("refund_exceeds_purchased");
   });
   it("counts the session total so a big refund can't be split", () => {
-    execute(s, "issue_refund", { order_id: "LP-1001", amount: 120, reason: "damaged", description: "" });
-    expect(rule("issue_refund", { order_id: "LP-1001", amount: 100, reason: "damaged" })).toBe("refund_auto_limit");
+    execute(s, "issue_refund", refund("LP-1001", [MUG]));
+    expect(rule("issue_refund", refund("LP-1001", [JACKET]))).toBe("refund_auto_limit");
   });
   it("blocks damage claims outside the 30-day window", () => {
     s = newSession("t2");
     as("jordan.alvarez@example.com", "LP-1004", "refund_request");
     execute(s, "lookup_order", { order_id: "LP-1004" });
-    expect(rule("issue_refund", { order_id: "LP-1004", amount: 79, reason: "defective" })).toBe("refund_window");
+    expect(rule("issue_refund", refund("LP-1004", [{ sku: "MER-BL-L", qty: 1 }], "defective"))).toBe("refund_window");
   });
   it("blocks a second refund on a fully refunded order", () => {
     s = newSession("t3");
     as("theo.brandt@example.com", "LP-1010", "refund_request");
     execute(s, "lookup_order", { order_id: "LP-1010" });
-    expect(rule("issue_refund", { order_id: "LP-1010", amount: 24, reason: "damaged" })).toBe("already_refunded");
+    expect(rule("issue_refund", refund("LP-1010", [MUG]))).toBe("already_refunded");
   });
   it("only allows lost-package refunds when tracking shows it lost", () => {
-    expect(rule("issue_refund", { order_id: "LP-1001", amount: 24, reason: "lost_package" })).toBe("lost_package_unconfirmed");
+    expect(rule("issue_refund", refund("LP-1001", [MUG], "lost_package"))).toBe("lost_package_unconfirmed");
     s = newSession("t4");
     as("priya.nair@example.com", "LP-1005", "refund_request");
     execute(s, "lookup_order", { order_id: "LP-1005" });
-    expect(rule("issue_refund", { order_id: "LP-1005", amount: 78, reason: "lost_package" })).toBe("allow");
+    expect(rule("issue_refund", refund("LP-1005", [{ sku: "HDL-300", qty: 2 }], "lost_package"))).toBe("allow");
   });
 });
 
@@ -104,6 +116,7 @@ describe("order state rules", () => {
   it("can't cancel or re-address a shipped order", () => {
     as("sam.okafor@example.com", "LP-1008", "cancel_order");
     execute(s, "lookup_order", { order_id: "LP-1008" });
+    s.turn += 1;
     expect(rule("cancel_order", { order_id: "LP-1008" })).toBe("cancel_requires_processing");
     s.activeAop = "update_address";
     expect(rule("update_shipping_address", { order_id: "LP-1008", new_address: "1 Main St, Seattle, WA 98101" })).toBe("address_requires_processing");

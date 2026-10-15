@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type Anthropic from "@anthropic-ai/sdk";
 import { World } from "../db/world.ts";
 
@@ -35,8 +36,8 @@ export interface Session {
   failedVerifications: number;
   activeAop: string | null;
   currentStep: number | null;
-  /** Orders the agent has looked up this session; mutations require a prior lookup. */
-  lookedUp: Set<string>;
+  /** Orders the agent has looked up, and the customer turn it happened in. */
+  lookedUp: Map<string, number>;
   /** Auto-issued refund total this session (prevents splitting a big refund into small ones). */
   autoRefunded: number;
   /** Everything the customer typed, used to decide what identifiers the reply may repeat. */
@@ -46,12 +47,10 @@ export interface Session {
   usage: Usage;
 }
 
-let counter = 0;
-
 export function newSession(id?: string): Session {
-  counter += 1;
   return {
-    id: id ?? `conv_${Date.now().toString(36)}_${counter}`,
+    // Unguessable: conversation ids are the only thing gating access to a conversation.
+    id: id ?? `conv_${randomUUID()}`,
     world: new World(),
     createdAt: Date.now(),
     turn: 0,
@@ -60,7 +59,7 @@ export function newSession(id?: string): Session {
     failedVerifications: 0,
     activeAop: null,
     currentStep: null,
-    lookedUp: new Set(),
+    lookedUp: new Map(),
     autoRefunded: 0,
     customerText: "",
     messages: [],

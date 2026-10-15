@@ -31,7 +31,7 @@ export interface TurnResult {
 
 const HANDOFF_REPLY = "You're connected to our specialist team, and someone will follow up here shortly. Thanks for your patience!";
 // Hard failures in the backend (not policy): enforced even when guardrails are off.
-const DATA_INTEGRITY_RULES = new Set(["order_not_found", "return_unknown_item"]);
+const DATA_INTEGRITY_RULES = new Set(["order_not_found", "return_unknown_item", "refund_unknown_item"]);
 
 export class SupportAgent {
   readonly cfg: AgentConfig;
@@ -105,7 +105,8 @@ export class SupportAgent {
   private async callModel(session: Session): Promise<Msg> {
     const params: Params = {
       model: this.cfg.model,
-      max_tokens: 16000,
+      // Replies are short; a tight cap bounds the cost of any single call.
+      max_tokens: 4096,
       system: [{ type: "text", text: this.system }],
       tools: TOOL_DEFS,
       messages: session.messages,

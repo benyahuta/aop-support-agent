@@ -17,13 +17,17 @@ export interface AgentConfig {
   maxVerificationAttempts: number;
 }
 
+const EFFORTS: Effort[] = ["low", "medium", "high", "xhigh", "max"];
+
 export function defaultConfig(overrides: Partial<AgentConfig> = {}): AgentConfig {
+  const effort = process.env.AGENT_EFFORT as Effort | undefined;
   return {
-    model: process.env.AGENT_MODEL ?? "claude-opus-5-5",
-    effort: (process.env.AGENT_EFFORT as Effort) ?? "low",
-    guardrails: (process.env.GUARDRAILS as GuardrailMode) ?? "enforced",
+    model: process.env.AGENT_MODEL || "claude-opus-5-5",
+    effort: effort && EFFORTS.includes(effort) ? effort : "low",
+    // Fail closed: anything other than the exact ablation value means enforced.
+    guardrails: process.env.GUARDRAILS === "prompt_only" ? "prompt_only" : "enforced",
     autoRefundLimit: 150,
-    maxToolIterations: 10,
+    maxToolIterations: 8,
     maxVerificationAttempts: 3,
     ...overrides,
   };

@@ -19,6 +19,7 @@ export type Verdict =
 
 const ORDER_SCOPED = new Set(["lookup_order", "track_shipment", "issue_refund", "create_return", "cancel_order", "update_shipping_address"]);
 const RETURN_WINDOW_DAYS = 30;
+const CONFIRM_FIRST = new Set(["cancel_order", "update_shipping_address"]);
 
 const block = (rule: string, detail: string): Verdict => ({ decision: "block", rule, detail });
 
@@ -50,6 +51,11 @@ export function checkToolCall(session: Session, aops: Map<string, CompiledAop>, 
     if (MUTATING.has(name) && !session.lookedUp.has(order.id)) {
       return block("lookup_before_action", `Call lookup_order for ${order.id} and review it with the customer before changing anything.`);
     }
+    // Irreversible account changes need the customer to have seen the order and
+    // confirmed in a later message, not in the same model turn as the lookup.
+    if (CONFIRM_FIRST.has(name) && session.lookedUp.get(order.id)! >= session.turn) {
+      return block("confirm_before_action", `Tell the customer what will change on ${order.id} and get their explicit confirmation before calling ${name}.`);
+    }
 
     const now = w.now();
     switch (name) {
@@ -69,8 +75,24 @@ export function checkToolCall(session: Session, aops: Map<string, CompiledAop>, 
         break;
       }
       case "issue_refund": {
-        const amount = Number(input.amount);
-        const remaining = round(order.total - order.refunded_amount - pendingFor(session, order.id));
+        // The model picks items; the amount is computed from the order. Each
+        // unit can be refunded at most once (issued or pending).
+        const items = w.items(order.id);
+        let amount = 0;
+        const wanted = new Map<string, number>();
+        for (const l of input.items as Array<{ sku: string; qty: number }>) {
+          const item = items.find((i) => i.sku.toUpperCase() === String(l.sku).trim().toUpperCase());
+          if (!item) return block("refund_unknown_item", `SKU ${l.sku} is not on order ${order.id}.`);
+          wanted.set(item.sku, (wanted.get(item.sku) ?? 0) + l.qty);
+          amount += item.unit_price * l.qty;
+        }
+        if (items.every((i) => w.refundedQty(order.id, i.sku) >= i.qty)) return block("already_refunded", "Every item on this order has already been refunded.");
+        for (const [sku, qty] of wanted) {
+          const item = items.find((i) => i.sku === sku)!;
+          const left = item.qty - w.refundedQty(order.id, sku);
+          if (qty > left) return block("refund_exceeds_purchased", `Only ${left} of ${item.name} can still be refunded (ordered ${item.qty}).`);
+        }
+        amount = round(amount);
         if (input.reason === "lost_package") {
           const s = w.shipment(order.id);
           const late = s ? daysBetween(s.eta, now) : 0;
@@ -81,8 +103,6 @@ export function checkToolCall(session: Session, aops: Map<string, CompiledAop>, 
           const days = daysBetween(order.delivered_at, now);
           if (days > RETURN_WINDOW_DAYS) return block("refund_window", `Delivered ${days} days ago; damage claims must be within ${RETURN_WINDOW_DAYS} days. Offer escalation for an exception review.`);
         }
-        if (remaining <= 0) return block("already_refunded", "This order has already been fully refunded.");
-        if (amount > remaining + 0.001) return block("refund_exceeds_paid", `Requested $${amount} but only $${remaining} is refundable on this order.`);
         // Approval threshold applies to the session total, so a large refund
         // can't be split into several small ones that each pass.
         if (round(session.autoRefunded + amount) > cfg.autoRefundLimit) {
@@ -95,44 +115,45 @@ export function checkToolCall(session: Session, aops: Map<string, CompiledAop>, 
   return { decision: "allow" };
 }
 
-function pendingFor(session: Session, orderId: string): number {
-  return session.world.refunds(orderId).filter((r) => r.status === "pending_approval").reduce((s, r) => s + r.amount, 0);
-}
-
 // --- output filter ------------------------------------------------------------
 
 const EMAIL = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi;
-const PHONE = /\b\d{3}-\d{4}\b/g;
-const ORDER = /\bLP-\d{3,}\b/gi;
+const PHONE = /\(?\b\d{3}\)?[\s.-]?\d{4}\b/g;
+const ORDER = /\bLP[\s-]?\d{3,}\b/gi;
+
+const escapeRe = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const digits = (x: string) => x.replace(/\D/g, "");
 
 /**
  * Redact identifiers in the reply that belong to someone other than the
- * verified customer and that the customer didn't type themselves. Catches
- * cross-account leaks even if every upstream check were somehow bypassed.
+ * verified customer and that the customer didn't type themselves: emails (and
+ * their local part), phone numbers in any format, order ids in any spacing,
+ * full names, and street addresses. Catches cross-account leaks even if every
+ * upstream check were somehow bypassed.
  */
 export function filterReply(session: Session, text: string): { text: string; redactions: string[] } {
   const w = session.world;
   const typed = session.customerText.toLowerCase();
-  const own = session.verifiedCustomerId ? w.customer(session.verifiedCustomerId) : undefined;
-  const ownOrders = new Set(own ? w.ordersFor(own.id).map((o) => o.id) : []);
+  const typedDigits = digits(session.customerText);
+  const me = session.verifiedCustomerId;
+  const others = (w.db.prepare("SELECT id, name, email, phone FROM customers").all() as Array<{ id: string; name: string; email: string; phone: string }>).filter((c) => c.id !== me);
+  const ownOrders = new Set(me ? w.ordersFor(me).map((o) => o.id) : []);
   const redactions: string[] = [];
+  const redact = (m: string) => { redactions.push(m); return "[redacted]"; };
 
-  const scrub = (re: RegExp, isAllowed: (m: string) => boolean, known: (m: string) => boolean) =>
-    (s: string) => s.replace(re, (m) => {
-      if (typed.includes(m.toLowerCase()) || isAllowed(m) || !known(m)) return m;
-      redactions.push(m);
-      return "[redacted]";
-    });
-
-  const emails = new Set(allCustomers(session).map((c) => c.email.toLowerCase()));
-  const phones = new Set(allCustomers(session).map((c) => c.phone));
   let out = text;
-  out = scrub(EMAIL, (m) => m.toLowerCase() === own?.email.toLowerCase(), (m) => emails.has(m.toLowerCase()))(out);
-  out = scrub(PHONE, (m) => m === own?.phone, (m) => phones.has(m))(out);
-  out = scrub(ORDER, (m) => ownOrders.has(m.toUpperCase()), (m) => Boolean(w.order(m)))(out);
+  out = out.replace(EMAIL, (m) => (others.some((c) => c.email.toLowerCase() === m.toLowerCase()) && !typed.includes(m.toLowerCase()) ? redact(m) : m));
+  out = out.replace(PHONE, (m) => (others.some((c) => digits(c.phone) === digits(m)) && !typedDigits.includes(digits(m)) ? redact(m) : m));
+  out = out.replace(ORDER, (m) => {
+    const id = `LP-${digits(m)}`;
+    return w.order(id) && !ownOrders.has(id) && !typedDigits.includes(digits(m)) ? redact(m) : m;
+  });
+  for (const c of others) {
+    const streets = w.ordersFor(c.id).map((o) => o.shipping_address.split(",")[0]);
+    for (const needle of [c.name, c.email.split("@")[0], ...streets]) {
+      if (typed.includes(needle.toLowerCase())) continue;
+      out = out.replace(new RegExp(escapeRe(needle), "gi"), redact);
+    }
+  }
   return { text: out, redactions };
-}
-
-function allCustomers(session: Session) {
-  return session.world.db.prepare("SELECT email, phone FROM customers").all() as Array<{ email: string; phone: string }>;
 }

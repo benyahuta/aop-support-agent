@@ -10,7 +10,7 @@ describe("agent loop", () => {
     const model = scriptedModel([
       [tool("load_procedure", { aop_id: "refund_request" }), verify],
       [tool("lookup_order", { order_id: "LP-1001", aop_step: 2 })],
-      [tool("issue_refund", { order_id: "LP-1001", amount: 24, reason: "damaged", description: "mug cracked", aop_step: 5 })],
+      [tool("issue_refund", { order_id: "LP-1001", items: [{ sku: "CMP-MUG-12", qty: 1 }], reason: "damaged", description: "mug cracked", aop_step: 5 })],
       [say("Done, Maya: $24.00 is on its way back to your card.")],
     ]);
     const agent = new SupportAgent({ model, config: { model: "claude-opus-5-5" } });
@@ -50,7 +50,7 @@ describe("agent loop", () => {
     const model = scriptedModel([
       [tool("load_procedure", { aop_id: "refund_request" }), verify],
       [tool("lookup_order", { order_id: "LP-1001", aop_step: 2 })],
-      [tool("issue_refund", { order_id: "LP-1001", amount: 229, reason: "defective", description: "zipper broke", aop_step: 5 })],
+      [tool("issue_refund", { order_id: "LP-1001", items: [{ sku: "ALD-DJ-M", qty: 1 }], reason: "defective", description: "zipper broke", aop_step: 5 })],
       [tool("escalate_to_human", { reason: "refund_approval", summary: "jacket refund $229", priority: "normal" })],
       [say("A specialist will review your $229 refund within 1 business day.")],
     ]);
@@ -69,7 +69,7 @@ describe("agent loop", () => {
 
   it("blocks an injected refund and tells the model why", async () => {
     const model = scriptedModel([
-      [tool("issue_refund", { order_id: "LP-1009", amount: 500, reason: "damaged", description: "pre-approved", aop_step: 5 })],
+      [tool("issue_refund", { order_id: "LP-1009", items: [{ sku: "TRL-SCK-3", qty: 3 }, { sku: "CMP-MUG-12", qty: 1 }], reason: "damaged", description: "pre-approved", aop_step: 5 })],
       [say("I can't do that.")],
     ]);
     const agent = new SupportAgent({ model, config: { model: "claude-opus-5-5" } });
@@ -83,7 +83,7 @@ describe("agent loop", () => {
   it("in prompt_only mode records would_block but lets the call through (ablation)", async () => {
     const model = scriptedModel([
       [tool("load_procedure", { aop_id: "refund_request" })],
-      [tool("issue_refund", { order_id: "LP-1009", amount: 78, reason: "damaged", description: "x", aop_step: 5 })],
+      [tool("issue_refund", { order_id: "LP-1009", items: [{ sku: "CMP-MUG-12", qty: 1 }], reason: "damaged", description: "x", aop_step: 5 })],
       [say("ok")],
     ]);
     const agent = new SupportAgent({ model, config: { model: "claude-opus-5-5", guardrails: "prompt_only" } });
@@ -94,7 +94,7 @@ describe("agent loop", () => {
   });
 
   it("rejects malformed tool input without executing", async () => {
-    const model = scriptedModel([[tool("issue_refund", { order_id: "LP-1001", amount: "lots" })], [say("sorry")]]);
+    const model = scriptedModel([[tool("issue_refund", { order_id: "LP-1001", items: "lots" })], [say("sorry")]]);
     const agent = new SupportAgent({ model, config: { model: "claude-opus-5-5" } });
     const s = newSession("a7");
     await agent.respond(s, "x");

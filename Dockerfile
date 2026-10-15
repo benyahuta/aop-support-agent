@@ -8,4 +8,5 @@ COPY aops ./aops
 COPY public ./public
 EXPOSE 8080
 ENV PORT=8080
+USER node
 CMD ["node", "src/server.ts"]
