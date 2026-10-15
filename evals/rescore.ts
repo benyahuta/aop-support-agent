@@ -19,7 +19,7 @@ for (const r of run.results) {
   const scenario = SCENARIOS.find((s) => s.id === r.id)!;
   const replies = r.transcript.filter((t: any) => t.role === "agent").map((t: any) => t.text);
   // Re-run text-only checks; keep saved results for checks that need the backend state.
-  r.checks = scenario.checks.map((c, i) => (c.textOnly ? { name: c.name, ...c.run({ replies, transcript: r.transcript, session: null as any }) } : r.checks[i]));
+  r.checks = scenario.checks.map((c, i) => (c.textOnly ? { name: c.name, ...c.run({ replies, transcript: r.transcript, session: null as any }) } : r.checks[i])).concat(r.checks.slice(scenario.checks.length)); // keep global checks as recorded
   const before = r.pass;
   r.checks_pass = !r.error && r.checks.every((c: any) => c.pass);
   r.pass = r.checks_pass && r.judge_pass;

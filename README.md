@@ -10,11 +10,11 @@ Built by Ben Guettler (Duke, Math + CS). Larkspur & Pine, its customers, and its
 
 ## Results at a glance
 
-- **Iterating with evals took the agent from 60.0% to 99.3%** of 135 conversations passing (45 scenarios x 3 trials; 97.8% of scenarios passed all 3 trials), with 100% of deterministic state checks passing in every enforced run. The last round of fixes came from four user-tester agents' bug reports.
+- **Iterating with evals took the agent from 60.0% to 98.5-99.3%** of 135 conversations passing (45 scenarios x 3 trials) over the last two builds, with 100% of deterministic state checks passing in every enforced run. The last rounds of fixes came from four user-tester agents' bug reports and from manual testing.
 - **Policy in code is what protects the money.** With the same prompt but guardrails in prompt-only mode, the agent issued **$2,541** in refunds that should have waited for human approval, across 9 conversations. Enforced: $0.
 - **The eval suite caught a regression.** A prompt change made the agent treat other customers' orders as typos. `eval:compare` exited 1 on `a14_order_id_variants` (100% -> 33%), and the next prompt fixed it.
 - **Opus 5.5, Sonnet 5.5, and Haiku 5.5 all scored 95.6%** (n=135 conversations each), so they are indistinguishable on this suite. Haiku cost $0.0008 per conversation vs. $0.0282 for Opus.
-- **Total eval spend was about $35** for 8 logged runs (1,080 conversations), plus smoke tests.
+- **Total eval spend was about $40** for 9 logged runs (1,215 conversations), plus smoke tests.
 
 Details are in [Results](#results).
 
@@ -44,7 +44,7 @@ What happens on one customer turn:
 1. **Server.** The Hono server (`src/server.ts`) checks per-IP and global rate limits, finds the conversation's `Session`, and hands the message to `SupportAgent.respond`. Each session owns its message history, trace, usage counters, verification state, and its own database.
 2. **Agent loop.** `SupportAgent` (`src/agent/agent.ts`) calls the Messages API with a static system prompt, the tool list, and the conversation so far. Requests use automatic prompt caching (the cache breakpoint moves to the end of the history on each call), a configurable `effort` level, and, on models that support it, the server-side refusal fallback. If the model stops with `refusal`, the conversation is handed to a human. The loop keeps calling the model until it stops asking for tools, capped at 8 model calls per turn and 4,096 output tokens per call. Text the model writes alongside a tool call is kept in the trace as a working note; only the turn's final message goes to the customer.
 3. **Procedures.** The system prompt only lists the available procedures and when to use each. When the agent decides what the customer needs, it calls `load_procedure`, which returns the compiled AOP: numbered steps, policies, and the tools this procedure may use.
-4. **Step attribution.** Every action tool takes a required `aop_step` parameter. The loop records which procedure and step each call belongs to, so the trace shows "refund_request, step 5: Issue the refund" next to the `issue_refund` call.
+4. **Step attribution.** Every action tool takes a required `aop_step` parameter, so the trace shows "refund_request, step 5: Issue the refund" next to the `issue_refund` call. Steps with no tool (asking what happened, confirming, closing) are attributed from a `<step N>` tag the agent puts at the end of each customer message; the server strips the tag before the customer sees it, and every eval scenario checks that none leaks.
 5. **Guardrails.** Before any tool runs, `checkToolCall` (`src/agent/guardrails.ts`) evaluates it against the session and the backend: is a procedure loaded that allows this tool, is the customer verified, do they own this order, is the order in a state where this action is allowed, are the refunded units still unrefunded, is the total under the auto-approval limit. The verdict is `allow`, `block` (the tool returns an error with the rule and reason, which the agent explains to the customer), or `require_approval` (the refund is created as `pending_approval` for a human).
 6. **Execution.** Tool inputs are validated with zod, then executed (`src/agent/tools.ts`) against a `World`: an in-memory `node:sqlite` database seeded with the store's customers, orders, shipments, and items, created fresh for each conversation.
 7. **Output filter.** The final reply passes through `filterReply`, which redacts another customer's email (or its local part), phone number in any format, order number in any spacing, full name, or street address, unless the customer typed it themselves.
@@ -149,7 +149,7 @@ A trial passes only if it has no errors, every check passes, and every judge cri
 
 ## Results
 
-All numbers come from `evals/results/` (8 logged runs, 45 scenarios x 3 trials each, 1,080 conversations). Per-run reports with every failed transcript are in `evals/results/<label>/report.md`. "Pass" means every deterministic check **and** every judge criterion passed. pass^3 is the share of scenarios that passed all 3 trials.
+All numbers come from `evals/results/` (9 logged runs, 45 scenarios x 3 trials each, 1,215 conversations). Per-run reports with every failed transcript are in `evals/results/<label>/report.md`. "Pass" means every deterministic check **and** every judge criterion passed. pass^3 is the share of scenarios that passed all 3 trials.
 
 **Iterating on the agent (Opus 5.5, effort low, guardrails enforced):**
 
@@ -160,6 +160,9 @@ All numbers come from `evals/results/` (8 logged runs, 45 scenarios x 3 trials e
 | `v3-opus` | p3: no embellished policy; neutral wording on failed verification | 97.8% | 95.6% | 100% | 96.5% | $0.027 |
 | `v4-opus` | p4: fixes the regression v3 introduced (below) | 95.6% | 88.9% | 100% | 98.2% | $0.028 |
 | `v5-opus` | p5 + AOP v4/v2: fixes from user testing (handoff follow-up, order lookup in every procedure, turn rollback on API failure) | **99.3%** | **97.8%** | 100% | 100% | $0.028 |
+| `v6-opus` | p6: `<step N>` tags so tool-less steps (like Close) show in the tracker | 98.5% | 95.6% | 100% | 98.2% | $0.029 |
+
+`eval:compare v5-opus v6-opus`: 1 scenario fixed, 0 regressions, 2 single-trial flips (judge grounding flags on minor details) listed as noise. No step tag reached a customer in any of the 135 conversations.
 
 What the evals caught along the way:
 
@@ -189,7 +192,7 @@ Every would-be block in prompt-only mode was the $150 approval limit (e.g. a $22
 
 All three models passed 95.6% of 135 conversations each, so they are indistinguishable on this suite. The gaps in pass^3 (one scenario) and adversarial pass rate (one or two of 57 conversations) are within run-to-run noise at 3 trials. That is not evidence that Haiku matches Opus in general. It does show that, with policy enforced in code and procedures loaded on demand, Haiku reached the same pass rate on this suite at about 1/35 of the cost and about 35% lower median latency. The demo still runs Opus because it is the strongest default and 45 scenarios is a small suite. The cost data makes Haiku the candidate to switch to after a larger eval, with this suite gating the change. Prompt caching served 86-88% of agent input tokens from cache in every enforced run (97% in the prompt-only ablation).
 
-Total API spend for all runs above was about $35: $32.69 across the 8 logged runs (agent plus simulator and judge), plus smoke tests, user-tester sessions, and two runs stopped partway.
+Total API spend for all runs above was about $40: $37.89 across the 9 logged runs (agent plus simulator and judge), plus smoke tests, user-tester sessions, and two runs stopped partway.
 
 
 ## Key design decisions
@@ -198,7 +201,7 @@ Total API spend for all runs above was about $35: $32.69 across the 8 logged run
 - **Policy in code, not only in prompts.** A rule that exists only in the prompt can be talked around, which is exactly what the adversarial scenarios try to do. The guardrails check the real order, shipment, and refund records, so "refund at most what was paid" holds even if the model is convinced otherwise. The prompt still describes the rules so the agent can explain a block in plain language, and `prompt_only` mode measures the difference.
 - **Progressive disclosure of AOPs.** The system prompt lists procedures by name and trigger only; full steps arrive through `load_procedure` when needed. The system prompt and tool list stay byte-identical across conversations (no timestamps, no user data), so they are served from the prompt cache on every call, and adding a procedure does not make every turn more expensive.
 - **A sandboxed world per conversation.** Each session gets its own in-memory SQLite database seeded from the same fixture. Evals are reproducible and can run concurrently without interfering, checks can read the exact state a conversation left behind, and public demo visitors can issue refunds and cancel orders without affecting each other.
-- **Step attribution through a tool parameter.** A required `aop_step` on every action tool costs a few tokens and gives the ops view a "which step is the agent on" signal without a second model call or a classifier.
+- **Step attribution without extra model calls.** A required `aop_step` on every action tool, plus a stripped `<step N>` tag on customer messages for steps that have no tool, gives the ops view a "which step is the agent on" signal without a second model call or a classifier. The first version used only the tool parameter, and manual testing found the tracker stuck before "Close" on chats that ended without an action.
 - **State-based deterministic checks plus a judge.** Checks on backend state catch the failures that matter most (wrong amount, wrong order, action taken without permission) with no grading noise. The judge covers what state cannot: tone, whether the agent asked for confirmation, and whether it told the truth about what happened.
 - **Cheaper models around the agent.** The customer simulator runs on Haiku and the judge on Sonnet, while the agent under test runs on Opus by default. Eval overhead stays a fraction of agent spend and is reported separately.
 - **A fixed store clock.** The store's "now" is pinned (`STORE_CLOCK` in `src/db/seed.ts`), so "delivered 12 days ago" and "outside the 30-day window" give the same answer in every run, and the system prompt does not change from day to day.
