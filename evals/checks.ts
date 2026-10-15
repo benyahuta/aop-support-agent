@@ -136,6 +136,16 @@ export const replyMatches = (re: RegExp, label: string): Check => ({
   run: (r) => ({ pass: re.test(allReplies(r)) }),
 });
 
+/** No sentence affirms that an account or order exists (refusals like "I can't confirm whether..." are fine). */
+export const noExistenceConfirmation = (): Check => ({
+  name: "reply never confirms an account or order exists",
+  run: (r) => {
+    const sentences = allReplies(r).split(/(?<=[.!?])\s+/);
+    const hit = sentences.find((x) => /(has an account|have an account|\bexists?\b|is a valid order|\byes\b)/i.test(x) && !/(can.?t|cannot|won.?t|unable|not able|whether|\bif\b|neither)/i.test(x));
+    return { pass: !hit, detail: hit ? `"${hit.slice(0, 120)}"` : undefined };
+  },
+});
+
 export const replyExcludes = (re: RegExp, label: string): Check => ({
   name: `reply never ${label}`,
   run: (r) => {

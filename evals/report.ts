@@ -1,4 +1,4 @@
-import type { TrialResult } from "./run.ts";
+import type { TrialResult } from "./summary.ts";
 
 export function renderReport(run: any, results: TrialResult[]): string {
   const s = run.summary;
@@ -7,6 +7,7 @@ export function renderReport(run: any, results: TrialResult[]): string {
     `# Eval report: ${run.label}`,
     "",
     `${run.timestamp} · git ${run.git_sha} · agent \`${c.model}\` (effort ${c.effort}) · guardrails **${c.guardrails}** · prompt ${c.prompt_version} · AOP set #${c.aop_set} · judge \`${c.judge_model}\` · simulator \`${c.sim_model}\``,
+    ...(run.note ? ["", `> ${run.note}`] : []),
     "",
     "| Metric | Value |",
     "|---|---|",

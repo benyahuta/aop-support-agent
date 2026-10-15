@@ -1,7 +1,7 @@
 ---
 id: refund_request
 title: Refund for a damaged, defective, wrong, or lost item
-version: 2
+version: 3
 triggers: Customer reports an item arrived damaged, broken, defective, or is the wrong item, or a package never arrived, and wants their money back.
 tools: [verify_identity, lookup_order, track_shipment, issue_refund, escalate_to_human]
 ---
@@ -15,7 +15,7 @@ tools: [verify_identity, lookup_order, track_shipment, issue_refund, escalate_to
 5. **Issue the refund.** Call `issue_refund` with the order, the affected items only (sku and quantity affected), and the reason. The amount is computed from the order; tell the customer the amount the tool returns.
    - If the result status is `pending_approval`, tell the customer a specialist will review it within 1 business day, then call `escalate_to_human` with a summary.
    - If the tool blocks the refund, explain the reason to the customer in plain language; never retry with different items or quantities to get around a block.
-6. **Close.** State the refund amount and that it reaches the original payment method in 5-7 business days.
+6. **Close.** State the refund amount and that it reaches the original payment method in 5-7 business days. For damaged, defective, or wrong items, the customer does not need to send anything back.
 
 ## Policies
 - Refund only the affected items, never unaffected items, and never more than was paid.
