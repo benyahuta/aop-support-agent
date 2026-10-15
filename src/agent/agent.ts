@@ -9,7 +9,7 @@ import { AOP_DIR, costUsd, defaultConfig, supportsDefaultFallback, type AgentCon
 import { checkToolCall, filterReply } from "./guardrails.ts";
 import { buildSystemPrompt } from "./prompt.ts";
 import { record, type Session, type TimedEvent } from "./session.ts";
-import { execute, SCHEMAS, TOOL_DEFS, TOOL_NAMES, type ToolName, type ToolOutput } from "./tools.ts";
+import { execute, MUTATING, SCHEMAS, TOOL_DEFS, TOOL_NAMES, type ToolName, type ToolOutput } from "./tools.ts";
 
 type Msg = Anthropic.Beta.BetaMessage;
 type Params = Anthropic.Beta.MessageCreateParamsNonStreaming;
@@ -19,7 +19,11 @@ export interface ModelClient {
   create(params: Params): Promise<Msg>;
 }
 
-export function anthropicClient(client = new Anthropic()): ModelClient {
+/** Per-request timeout and retries: a hung upstream fails the turn in minutes, not half an hour. */
+export const MODEL_TIMEOUT_MS = 60_000;
+export const MODEL_MAX_RETRIES = 2;
+
+export function anthropicClient(client = new Anthropic({ timeout: MODEL_TIMEOUT_MS, maxRetries: MODEL_MAX_RETRIES })): ModelClient {
   return { create: (params) => client.beta.messages.create(params) };
 }
 
@@ -29,7 +33,13 @@ export interface TurnResult {
   status: Session["status"];
 }
 
-const HANDOFF_REPLY = "You're connected to our specialist team, and someone will follow up here shortly. Thanks for your patience!";
+/** Thrown when a turn runs past its wall-clock budget. */
+export class TurnTimeoutError extends Error {}
+
+/** Canned reply when the runtime (not the model) hands off. Truthful for this demo: follow-up happens in this chat. */
+export function handoffReply(ticketId: string | null): string {
+  return `Your request is with our specialist team${ticketId ? ` (ticket ${ticketId})` : ""}. They'll reply right here in this chat, usually within 1 business day. If you have a different question in the meantime, just ask.`;
+}
 // Hard failures in the backend (not policy): enforced even when guardrails are off.
 const DATA_INTEGRITY_RULES = new Set(["order_not_found", "return_unknown_item", "refund_unknown_item"]);
 
@@ -52,21 +62,51 @@ export class SupportAgent {
     record(session, { type: "customer_message", text });
     session.customerText += "\n" + text;
 
-    if (session.status === "handoff") {
-      record(session, { type: "agent_message", text: HANDOFF_REPLY });
-      return { reply: HANDOFF_REPLY, events: session.trace.slice(start), status: session.status };
+    // Snapshot for rollback: a failed turn leaves no partial history behind.
+    const historyLen = session.messages.length;
+    const notesBefore = [...session.pendingNotes];
+    const noticeBefore = session.handoffNoticeFor;
+    try {
+      return await this.runTurn(session, text, start);
+    } catch (err) {
+      session.messages.length = historyLen;
+      session.pendingNotes = notesBefore;
+      session.handoffNoticeFor = noticeBefore;
+      // Actions that did run in the failed turn stay in the backend; tell the model next turn.
+      const done = session.trace.slice(start).filter((e): e is Extract<TimedEvent, { type: "tool_result" }> => e.type === "tool_result" && e.ok && (MUTATING.has(e.name) || e.name === "escalate_to_human"));
+      if (done.length) {
+        session.pendingNotes.push(`System note: the previous turn failed before you could reply, but these actions completed: ${done.map((e) => `${e.name} ${JSON.stringify(e.output)}`).join("; ")}. The customer has not been told yet.`);
+      }
+      record(session, { type: "error", message: err instanceof Error ? `${err.name}: ${err.message}`.slice(0, 300) : String(err) });
+      throw err;
     }
+  }
 
+  private async runTurn(session: Session, text: string, start: number): Promise<TurnResult> {
+    const deadline = Date.now() + this.cfg.turnDeadlineMs;
     session.messages.push({ role: "user", content: text });
+
+    // Mid-conversation system message, right after the customer's message: the
+    // model learns about an open handoff (once per ticket) and ops decisions.
+    const notes = [...session.pendingNotes];
+    if (session.status === "handoff" && session.handoffTicket && session.handoffNoticeFor !== session.handoffTicket) {
+      notes.push(`Handoff in effect: ticket ${session.handoffTicket} is open and the escalated request is with a human specialist, who will reply in this chat, usually within 1 business day. Do not act on that escalated request or escalate it again; answer questions about it truthfully from the conversation. Any new, different request can be handled normally with the usual procedures.`);
+      session.handoffNoticeFor = session.handoffTicket;
+    }
+    if (notes.length) {
+      session.messages.push({ role: "system", content: notes.join("\n\n") });
+      session.pendingNotes = [];
+    }
     const replyParts: string[] = [];
 
     for (let i = 0; ; i++) {
       if (i >= this.cfg.maxToolIterations) {
         record(session, { type: "guardrail", rule: "loop_budget", decision: "block", detail: `Exceeded ${this.cfg.maxToolIterations} model calls in one turn; escalating.` });
         this.forceHandoff(session, "agent_error", "Agent exceeded its tool-call budget in one turn.");
-        replyParts.push(HANDOFF_REPLY);
+        replyParts.push(handoffReply(session.handoffTicket));
         break;
       }
+      if (Date.now() > deadline) throw new TurnTimeoutError(`Turn exceeded ${this.cfg.turnDeadlineMs} ms`);
 
       const msg = await this.callModel(session);
       // Append the full content (including thinking blocks) unchanged: the API
@@ -82,7 +122,7 @@ export class SupportAgent {
 
       if (msg.stop_reason === "refusal") {
         this.forceHandoff(session, "safety_or_legal", "Model declined to continue this conversation.");
-        replyParts.push(HANDOFF_REPLY);
+        replyParts.push(handoffReply(session.handoffTicket));
         break;
       }
       const toolUses = msg.content.filter((b): b is Anthropic.Beta.BetaToolUseBlock => b.type === "tool_use");
@@ -97,9 +137,11 @@ export class SupportAgent {
       session.messages.push({ role: "user", content: results });
     }
 
+    this.advanceToClose(session, start);
+
     // If the model put its only customer-facing words alongside a tool call, fall back to them.
     const lastNote = [...session.trace.slice(start)].reverse().find((e) => e.type === "agent_note") as { text: string } | undefined;
-    let reply = replyParts.join("\n\n") || lastNote?.text || ((session.status as Session["status"]) === "handoff" ? HANDOFF_REPLY : "Sorry, I didn't catch that. Could you say it another way?");
+    let reply = replyParts.join("\n\n") || lastNote?.text || ((session.status as Session["status"]) === "handoff" ? handoffReply(session.handoffTicket) : "Sorry, I didn't catch that. Could you say it another way?");
     const filtered = filterReply(session, reply);
     if (filtered.redactions.length) {
       record(session, { type: "guardrail", rule: "output_pii", decision: "redact", detail: `Redacted ${filtered.redactions.length} identifier(s) belonging to another customer.` });
@@ -107,6 +149,23 @@ export class SupportAgent {
     }
     record(session, { type: "agent_message", text: reply });
     return { reply, events: session.trace.slice(start), status: session.status };
+  }
+
+  /**
+   * The closing step of a procedure has no tool call, so nothing would mark it
+   * current. If this turn completed the action in the step right before a
+   * tool-less final step, move the step tracker to that final step.
+   */
+  private advanceToClose(session: Session, start: number) {
+    if (!session.activeAop || session.currentStep === null) return;
+    const aop = this.aops.get(session.activeAop);
+    const last = aop?.steps.at(-1);
+    if (!aop || !last || last.tools.length > 0 || session.currentStep !== last.n - 1) return;
+    const events = session.trace.slice(start);
+    const completed = events.some((e) => e.type === "tool_result" && e.ok && MUTATING.has(e.name) && (e.output as any)?.status !== "pending_approval");
+    if (!completed) return;
+    session.currentStep = last.n;
+    record(session, { type: "step", aop_id: aop.id, step: last.n, title: last.title });
   }
 
   private async callModel(session: Session): Promise<Msg> {
@@ -190,7 +249,7 @@ export class SupportAgent {
     }
 
     const out = execute(session, tu.name as ToolName, input, { requireApproval });
-    if (tu.name === "escalate_to_human" && out.ok) {
+    if (tu.name === "escalate_to_human" && out.ok && !out.already_open) {
       record(session, { type: "handoff", ticket_id: String(out.ticket_id), reason: input.reason, summary: input.summary });
     }
     return done(out);
@@ -200,6 +259,7 @@ export class SupportAgent {
     if (session.status === "handoff") return;
     const t = session.world.createTicket(session.verifiedCustomerId, reason, summary, "normal");
     session.status = "handoff";
+    session.handoffTicket = t.id;
     record(session, { type: "handoff", ticket_id: t.id, reason, summary });
   }
 }
@@ -213,5 +273,13 @@ export function decideRefund(session: Session, refundId: string, approve: boolea
     ? `Update from the Larkspur & Pine team: your refund of $${r.amount.toFixed(2)} for order ${r.order_id} has been approved. It will reach your original payment method in 5-7 business days.`
     : `Update from the Larkspur & Pine team: after review we weren't able to approve the refund for order ${r.order_id}. A specialist will email you with details.`;
   record(session, { type: "agent_message", text: note });
+  // The model learns about the decision after the customer's next message
+  // (history is append-only, and a system message can't follow an assistant turn).
+  session.pendingNotes.push(`Ops update: refund ${r.id} for $${r.amount.toFixed(2)} on ${r.order_id} was ${approve ? "approved" : "denied"} by a specialist; the customer has been told: "${note}"`);
+  // Hand the conversation back to the agent once nothing else awaits a specialist decision.
+  if (session.status === "handoff" && !session.world.refunds().some((x) => x.status === "pending_approval")) {
+    session.status = "active";
+    session.handoffTicket = null;
+  }
   return note;
 }

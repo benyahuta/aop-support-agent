@@ -8,16 +8,28 @@ Live demo: https://larkspur-support-agent.fly.dev · Source: https://github.com/
 
 Built by Ben Guettler (Duke, Math + CS). Larkspur & Pine, its customers, and its orders are fictional.
 
+## Results at a glance
+
+- **Iterating with evals took the agent from 60.0% to 99.3%** of 135 conversations passing (45 scenarios x 3 trials; 97.8% of scenarios passed all 3 trials), with 100% of deterministic state checks passing in every enforced run. The last round of fixes came from four user-tester agents' bug reports.
+- **Policy in code is what protects the money.** With the same prompt but guardrails in prompt-only mode, the agent issued **$2,541** in refunds that should have waited for human approval, across 9 conversations. Enforced: $0.
+- **The eval suite caught a regression.** A prompt change made the agent treat other customers' orders as typos. `eval:compare` exited 1 on `a14_order_id_variants` (100% -> 33%), and the next prompt fixed it.
+- **Opus 5.5, Sonnet 5.5, and Haiku 5.5 all scored 95.6%** (n=135 conversations each), so they are indistinguishable on this suite. Haiku cost $0.0008 per conversation vs. $0.0282 for Opus.
+- **Total eval spend was about $35** for 8 logged runs (1,080 conversations), plus smoke tests.
+
+Details are in [Results](#results).
+
 ## What it does
 
 The demo page is split in two.
 
 **Customer view.** A chat window where you play the customer. Demo accounts (fictional names, emails, and order numbers) are listed under the chat so you can try verified flows: where's my order, a cracked mug refund, cancelling an unshipped order, changing an address, returning one of two base layers, a lost package. You can also try to break it: claim to be an admin, ask about someone else's order, ask for two refunds that each fall under the limit.
 
+After a handoff to a human, the customer can keep chatting: the agent still answers questions, but it won't act on the request it escalated. When ops approves a queued refund, the conversation reopens and the customer gets the update in the chat.
+
 **Ops view.** What a support operations team would watch, updated after each turn:
 
 - **Trace.** Every event in order: customer and agent messages, which AOP was loaded and which step the agent is on, each tool call with its input and result, each guardrail decision (`allow`, `block`, `require_approval`, or `redact`), and handoffs to a human with the ticket summary. Each model call shows latency, input/output tokens, and cache reads and writes.
-- **Backend.** The refunds, returns, and tickets the conversation created in its own copy of the store database. A refund over the automatic limit sits in `pending_approval` with Approve and Deny buttons; deciding it records an `approval` event and posts an update to the customer.
+- **Backend.** The refunds, returns, order changes (cancellations and address updates), and tickets in the conversation's own copy of the store database. Refunds that were already in the seed data (for the "already refunded" scenario) are labelled as pre-existing, so they aren't mistaken for something the agent did. A refund over the automatic limit sits in `pending_approval` with Approve and Deny buttons; deciding it records an `approval` event and posts an update to the customer.
 - **AOPs.** The compiled procedures with their version and content hash.
 - A status bar with handoff and verification state, model calls, running token and cost totals, and the loaded AOP's steps with the current one highlighted. The page header shows the active model, effort level, and guardrail mode.
 
@@ -46,9 +58,9 @@ Procedures live in `aops/*.md`: `order_status`, `refund_request`, `return_item`,
 ---
 id: refund_request
 title: Refund for a damaged, defective, wrong, or lost item
-version: 2
+version: 4
 triggers: Customer reports an item arrived damaged, broken, defective, or is the wrong item, or a package never arrived, and wants their money back.
-tools: [verify_identity, lookup_order, track_shipment, issue_refund, escalate_to_human]
+tools: [verify_identity, lookup_order, list_customer_orders, track_shipment, issue_refund, escalate_to_human]
 ---
 
 ## Steps
@@ -137,7 +149,7 @@ A trial passes only if it has no errors, every check passes, and every judge cri
 
 ## Results
 
-All numbers come from `evals/results/` (7 logged runs, 45 scenarios x 3 trials each, 945 conversations). Per-run reports with every failed transcript are in `evals/results/<label>/report.md`. "Pass" means every deterministic check **and** every judge criterion passed. pass^3 is the share of scenarios that passed all 3 trials.
+All numbers come from `evals/results/` (8 logged runs, 45 scenarios x 3 trials each, 1,080 conversations). Per-run reports with every failed transcript are in `evals/results/<label>/report.md`. "Pass" means every deterministic check **and** every judge criterion passed. pass^3 is the share of scenarios that passed all 3 trials.
 
 **Iterating on the agent (Opus 5.5, effort low, guardrails enforced):**
 
@@ -147,6 +159,7 @@ All numbers come from `evals/results/` (7 logged runs, 45 scenarios x 3 trials e
 | `v2-notes-fix` | p2: working notes kept out of replies; no example order ids | 89.6% | 84.4% | 100% | 96.5% | $0.028 |
 | `v3-opus` | p3: no embellished policy; neutral wording on failed verification | 97.8% | 95.6% | 100% | 96.5% | $0.027 |
 | `v4-opus` | p4: fixes the regression v3 introduced (below) | 95.6% | 88.9% | 100% | 98.2% | $0.028 |
+| `v5-opus` | p5 + AOP v4/v2: fixes from user testing (handoff follow-up, order lookup in every procedure, turn rollback on API failure) | **99.3%** | **97.8%** | 100% | 100% | $0.028 |
 
 What the evals caught along the way:
 
@@ -155,7 +168,7 @@ What the evals caught along the way:
 - **A prompt change that caused a regression.** p3's rule "on failed verification, ask the customer to re-check both details" made the agent treat other customers' orders as typos ("double-check those numbers") instead of saying they weren't on the account. `npm run eval:compare v2-notes-fix v3-opus` exited 1, showing `a14_order_id_variants: 100% -> 33%`. p4 scoped the rule and brought a14 back to 100%. The same scenario exposed an output-filter bug: the customer typed fullwidth digits, which the filter didn't match against the agent's reply, so it was fixed with NFKC normalization.
 - **Bugs in the eval harness itself.** The judge only saw tool results truncated to 700 characters, so it called procedure-sourced timelines "invented". Two text checks had false positives, one matching "has an account" inside a refusal and one flagging the agent repeating a name the attacker typed. Each was fixed in the harness, and saved runs were re-scored with `evals/rescore.ts`, which only touches text-only checks and records a note in the run.
 
-v3 to v4 moved the pass rate by 2.2 points, with no deterministic check failures in either run. `eval:compare v3-opus v4-opus` lists three scenarios that lost a single trial as noise (at 3 trials, one flip is within run-to-run variance). It flags one real regression: `h09_policy_shipping_cost` went from 3/3 to 1/3, because the agent adds an unsourced "the 2-day clock starts when it ships". That's an open item. The likely fix is clearer shipping text in the policy knowledge base, not another prompt rule.
+v3 to v4 moved the pass rate by 2.2 points, with no deterministic check failures in either run. `eval:compare v3-opus v4-opus` lists three scenarios that lost a single trial as noise (at 3 trials, one flip is within run-to-run variance). It flags one real regression: `h09_policy_shipping_cost` went from 3/3 to 1/3, because the agent added an unsourced "the 2-day clock starts when it ships". v5 passed it 3/3, and `eval:compare v4-opus v5-opus` reports 5 scenarios fixed, 0 regressions, and one single-trial flip (`e13_no_order_number`, 3/3 to 2/3) listed as noise.
 
 **Code guardrails vs. prompt only** (same agent, prompt p2, `--guardrails prompt_only`):
 
@@ -174,9 +187,9 @@ Every would-be block in prompt-only mode was the $150 approval limit (e.g. a $22
 | Claude Sonnet 5.5 | 95.6% | 91.1% | 96.5% | $0.0144 | 3.2s / 7.7s |
 | Claude Haiku 5.5 | 95.6% | 88.9% | 100% | $0.0008 | 2.5s / 6.0s |
 
-On this suite, with policy enforced in code and procedures loaded on demand, Haiku matches Opus at about 1/35 of the cost and about 35% lower median latency. For a high-volume support workload that argues for Haiku as the default, with this suite gating any model change. Prompt caching served about 87% of agent input tokens from cache in every run.
+All three models passed 95.6% of 135 conversations each, so they are indistinguishable on this suite. The gaps in pass^3 (one scenario) and adversarial pass rate (one or two of 57 conversations) are within run-to-run noise at 3 trials. That is not evidence that Haiku matches Opus in general. It does show that, with policy enforced in code and procedures loaded on demand, Haiku reached the same pass rate on this suite at about 1/35 of the cost and about 35% lower median latency. The demo still runs Opus because it is the strongest default and 45 scenarios is a small suite. The cost data makes Haiku the candidate to switch to after a larger eval, with this suite gating the change. Prompt caching served 86-88% of agent input tokens from cache in every enforced run (97% in the prompt-only ablation).
 
-Total API spend for all runs above was about $30: $27.73 across the 7 logged runs (agent plus simulator and judge), plus smoke tests and two runs stopped partway.
+Total API spend for all runs above was about $35: $32.69 across the 8 logged runs (agent plus simulator and judge), plus smoke tests, user-tester sessions, and two runs stopped partway.
 
 
 ## Key design decisions
@@ -210,7 +223,7 @@ Requires Node 24 or newer. The project uses the built-in `node:sqlite` module an
 npm install
 echo "ANTHROPIC_API_KEY=sk-ant-..." > .env
 npm run dev          # http://localhost:8787
-npm test             # 76 unit tests: compiler, guardrails, agent loop, security regressions, eval checks (no API calls)
+npm test             # unit tests: compiler, guardrails, agent loop, security regressions, eval checks (no API calls)
 npm run typecheck
 npm run aop:compile  # validate every AOP and print the AOP set hash
 ```
@@ -226,37 +239,7 @@ node evals/rescore.ts baseline a05   # re-apply a corrected text-only check to a
 node scripts/screenshot.ts           # regenerate docs/screenshot.png against a running server
 ```
 
-| Flag | Default | Meaning |
-|---|---|---|
-| `--label` | generated from config | Name of the run; results go to `evals/results/<label>/` |
-| `--model` | `claude-opus-5-5` | Agent model |
-| `--effort` | `low` | Agent effort level |
-| `--guardrails` | `enforced` | `enforced` or `prompt_only` |
-| `--trials` | `1` | Runs per scenario |
-| `--only` | all | Comma-separated scenario id prefixes |
-| `--concurrency` | `6` | Conversations in parallel |
-| `--aops` | `aops/` | Directory of AOPs to test (for trying a procedure change) |
-| `--judge-model` | `claude-sonnet-5-5` | Judge model |
-| `--sim-model` | `claude-haiku-5-5` | Customer simulator model |
-| `--no-judge` | off | Deterministic checks only |
-
-Environment variables for the server:
-
-| Variable | Default | Meaning |
-|---|---|---|
-| `ANTHROPIC_API_KEY` | none | Required |
-| `AGENT_MODEL` | `claude-opus-5-5` | Agent model |
-| `AGENT_EFFORT` | `low` | `low`, `medium`, `high`, `xhigh`, or `max` |
-| `GUARDRAILS` | `enforced` | `enforced` or `prompt_only` |
-| `RATE_PER_IP_HOUR` | `40` | Messages per IP per hour |
-| `RATE_GLOBAL_DAY` | `600` | Messages per day across all visitors |
-| `DAILY_BUDGET_USD` | `10` | Daily API spend cap; each turn reserves a worst-case $0.75 before it runs |
-| `CONVERSATIONS_PER_IP_HOUR` | `20` | New conversations per IP (IPv6: per /64) per hour |
-| `REQUESTS_PER_IP_HOUR` | `600` | All API requests per IP per hour |
-| `MAX_IN_FLIGHT` | `4` | Turns processed at once across all visitors |
-| `STATE_DIR` | unset (`/data` in Docker) | Where the daily budget is persisted so it survives restarts |
-| `DEMO_OPS_APPROVAL` | on | Set to `0` to disable the simulated-ops Approve/Deny endpoint |
-| `PORT` | `8787` | Listen port (`8080` in the Docker image) |
+All eval flags and server environment variables (rate limits, daily budget, guardrail mode, model) are listed in [docs/configuration.md](docs/configuration.md).
 
 Deploy to Fly.io (config in `fly.toml`, image from `Dockerfile`):
 
@@ -300,6 +283,6 @@ evals/
   results/               Run outputs and history.jsonl
 test/                    Vitest unit tests (model calls stubbed), incl. security regressions
 scripts/screenshot.ts    Drives a real conversation in Chrome and saves docs/screenshot.png
-docs/                    Architecture diagram and screenshot
+docs/                    Architecture diagram, screenshots, configuration reference
 Dockerfile  fly.toml
 ```

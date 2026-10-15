@@ -33,6 +33,12 @@ export interface Session {
   createdAt: number;
   turn: number;
   status: "active" | "handoff";
+  /** Open specialist ticket while handed off. */
+  handoffTicket: string | null;
+  /** Ticket the model has already been told about (via a mid-conversation system message). */
+  handoffNoticeFor: string | null;
+  /** Out-of-band updates (e.g. ops decisions) to show the model after the next customer message. */
+  pendingNotes: string[];
   verifiedCustomerId: string | null;
   failedVerifications: number;
   activeAop: string | null;
@@ -56,6 +62,9 @@ export function newSession(id?: string): Session {
     createdAt: Date.now(),
     turn: 0,
     status: "active",
+    handoffTicket: null,
+    handoffNoticeFor: null,
+    pendingNotes: [],
     verifiedCustomerId: null,
     failedVerifications: 0,
     activeAop: null,

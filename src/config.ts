@@ -15,6 +15,8 @@ export interface AgentConfig {
   autoRefundLimit: number;
   maxToolIterations: number;
   maxVerificationAttempts: number;
+  /** Wall-clock cap for one customer turn (all model calls together). */
+  turnDeadlineMs: number;
 }
 
 const EFFORTS: Effort[] = ["low", "medium", "high", "xhigh", "max"];
@@ -29,6 +31,7 @@ export function defaultConfig(overrides: Partial<AgentConfig> = {}): AgentConfig
     autoRefundLimit: 150,
     maxToolIterations: 8,
     maxVerificationAttempts: 3,
+    turnDeadlineMs: 150_000,
     ...overrides,
   };
 }

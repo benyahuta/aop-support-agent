@@ -114,7 +114,7 @@
 
   <rect x="36" y="440" width="154" height="76" rx="8" class="aop"/>
   <text x="113" y="463" text-anchor="middle" class="t">Scenarios</text>
-  <text x="113" y="482" text-anchor="middle" class="s">38 scenarios</text>
+  <text x="113" y="482" text-anchor="middle" class="s">45 scenarios</text>
   <text x="113" y="500" text-anchor="middle" class="s">scripted or persona</text>
 
   <rect x="220" y="440" width="160" height="76" rx="8" class="model"/>

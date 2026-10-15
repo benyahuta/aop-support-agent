@@ -4,7 +4,8 @@ import type { ModelClient } from "../src/agent/agent.ts";
 type Block = { text: string } | { tool: string; input: Record<string, unknown> };
 
 /** A ModelClient that replays scripted assistant turns and records requests. */
-export function scriptedModel(turns: Block[][]): ModelClient & { requests: Anthropic.Beta.MessageCreateParamsNonStreaming[] } {
+/** A turn is a list of blocks, or an Error to throw (simulating an API failure). */
+export function scriptedModel(turns: Array<Block[] | Error>): ModelClient & { requests: Anthropic.Beta.MessageCreateParamsNonStreaming[] } {
   let i = 0;
   let id = 0;
   const requests: Anthropic.Beta.MessageCreateParamsNonStreaming[] = [];
@@ -14,6 +15,7 @@ export function scriptedModel(turns: Block[][]): ModelClient & { requests: Anthr
       requests.push(structuredClone(params));
       const blocks = turns[i++];
       if (!blocks) throw new Error(`scripted model ran out of turns (call ${i})`);
+      if (blocks instanceof Error) throw blocks;
       const content = blocks.map((b) =>
         "text" in b ? { type: "text", text: b.text, citations: null } : { type: "tool_use", id: `tu_${++id}`, name: b.tool, input: b.input },
       );

@@ -90,7 +90,8 @@ CREATE TABLE tickets (id TEXT PRIMARY KEY, customer_id TEXT, reason TEXT, summar
 
 export class World {
   readonly db: DatabaseSync;
-  private seq = 0;
+  /** One counter per id prefix: RF-0001, TCK-0001, RMA-0001. */
+  private seq = new Map<string, number>();
 
   constructor() {
     this.db = new DatabaseSync(":memory:");
@@ -120,7 +121,7 @@ export class World {
       if (x.prior_refund) {
         // Seeded history: every item on the order was already refunded.
         const id = `RF-${x.id}-0`;
-        this.db.prepare("INSERT INTO refunds VALUES (?,?,?,?,?,?,?)").run(id, x.id, x.prior_refund, "damaged", "issued", "2026-10-04T10:00:00.000Z", "agent");
+        this.db.prepare("INSERT INTO refunds VALUES (?,?,?,?,?,?,?)").run(id, x.id, x.prior_refund, "damaged", "issued", "2026-10-04T10:00:00.000Z", "seed");
         for (const it of x.items) this.db.prepare("INSERT INTO refund_items VALUES (?,?,?,?)").run(id, x.id, it.sku, it.qty);
         this.db.prepare("UPDATE orders SET refunded_amount = ? WHERE id = ?").run(x.prior_refund, x.id);
       }
@@ -128,8 +129,9 @@ export class World {
   }
 
   nextId(prefix: string): string {
-    this.seq += 1;
-    return `${prefix}-${String(this.seq).padStart(4, "0")}`;
+    const n = (this.seq.get(prefix) ?? 0) + 1;
+    this.seq.set(prefix, n);
+    return `${prefix}-${String(n).padStart(4, "0")}`;
   }
 
   // --- reads ---------------------------------------------------------------
@@ -150,6 +152,9 @@ export class World {
   }
   ordersFor(customerId: string): Order[] {
     return this.db.prepare("SELECT * FROM orders WHERE customer_id = ? ORDER BY placed_at DESC").all(customerId) as unknown as Order[];
+  }
+  orders(): Order[] {
+    return this.db.prepare("SELECT * FROM orders ORDER BY id").all() as unknown as Order[];
   }
   refunds(orderId?: string): Refund[] {
     return (orderId
@@ -206,6 +211,9 @@ export class World {
     const r: ReturnRecord = { id, order_id: orderId, sku, reason, label_url: `https://returns.larkspur-pine.example/${id}.pdf`, created_at: this.now().toISOString() };
     this.db.prepare("INSERT INTO returns VALUES (?,?,?,?,?,?)").run(r.id, r.order_id, r.sku, r.reason, r.label_url, r.created_at);
     return r;
+  }
+  appendTicketSummary(id: string, more: string) {
+    this.db.prepare("UPDATE tickets SET summary = summary || ? WHERE id = ?").run(`\n\nFollow-up: ${more}`, id);
   }
   createTicket(customerId: string | null, reason: string, summary: string, priority: Ticket["priority"]): Ticket {
     const t: Ticket = { id: this.nextId("TCK"), customer_id: customerId, reason, summary, priority, created_at: this.now().toISOString() };

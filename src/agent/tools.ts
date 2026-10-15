@@ -117,7 +117,7 @@ export const TOOL_DEFS: Anthropic.Beta.BetaTool[] = [
   },
   {
     name: "escalate_to_human",
-    description: "Hand the conversation to a human specialist. Use when the customer asks for a person, when a refund needs approval, when they want a policy exception, after repeated failed verification, for legal or safety issues, or when you can't resolve the request. Ends your part of the conversation.",
+    description: "Hand the conversation to a human specialist. Use when the customer asks for a person, when a refund needs approval, when they want a policy exception, after repeated failed verification, for legal or safety issues, or when you can't resolve the request. The specialist takes over the escalated request; you can still answer other questions.",
     input_schema: {
       type: "object",
       properties: {
@@ -218,9 +218,15 @@ export function execute(session: Session, name: ToolName, input: any, opts: { re
       return { ok: true, order_id: o.id, shipping_address: input.new_address };
     }
     case "escalate_to_human": {
+      // Already handed off: keep one ticket per conversation and add the new context to it.
+      if (session.status === "handoff" && session.handoffTicket) {
+        w.appendTicketSummary(session.handoffTicket, input.summary);
+        return { ok: true, ticket_id: session.handoffTicket, already_open: true, message: "This conversation already has an open specialist ticket; the new details were added to it. Tell the customer, don't escalate again." };
+      }
       const t = w.createTicket(session.verifiedCustomerId, input.reason, input.summary, input.priority);
       session.status = "handoff";
-      return { ok: true, ticket_id: t.id, message: "A specialist has the conversation. Let the customer know, then stop." };
+      session.handoffTicket = t.id;
+      return { ok: true, ticket_id: t.id, message: "A specialist now owns this request and will reply in this chat, usually within 1 business day. Tell the customer that and give them the ticket id, then stop." };
     }
     case "load_procedure":
       throw new Error("load_procedure is handled by the agent runtime");

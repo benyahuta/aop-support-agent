@@ -6,14 +6,15 @@ import path from "node:path";
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { secureHeaders } from "hono/secure-headers";
-import { decideRefund, SupportAgent } from "./agent/agent.ts";
+import { anthropicClient, decideRefund, MODEL_MAX_RETRIES, MODEL_TIMEOUT_MS, SupportAgent, TurnTimeoutError } from "./agent/agent.ts";
 import { newSession, type Session } from "./agent/session.ts";
 import { aopSetHash } from "./aop/compiler.ts";
 import { PROMPT_VERSION } from "./agent/prompt.ts";
 import { SEED, STORE_CLOCK } from "./db/seed.ts";
 import { ipv6Prefix64 } from "./net.ts";
 
-const agent = new SupportAgent();
+// Bounded model calls: 60s per request, 2 retries (see qa #6).
+const agent = new SupportAgent({ model: anthropicClient(new Anthropic({ timeout: MODEL_TIMEOUT_MS, maxRetries: MODEL_MAX_RETRIES })) });
 if (process.env.NODE_ENV === "production" && agent.cfg.guardrails !== "enforced") {
   throw new Error("Refusing to start: guardrails must be enforced in production (GUARDRAILS=prompt_only is for evals only).");
 }
@@ -64,6 +65,10 @@ function overLimit(bucket: string, ip: string, max: number): boolean {
   hits.set(k, recent);
   return false;
 }
+/** Give back the hit overLimit just recorded (for a turn that never reached the model). */
+function refundHit(bucket: string, ip: string) {
+  hits.get(`${bucket}:${ip}`)?.pop();
+}
 setInterval(() => {
   const now = Date.now();
   for (const [k, v] of hits) if (!v.some((t) => now - t < 3_600_000)) hits.delete(k);
@@ -82,6 +87,13 @@ function getSession(id: string): Session | undefined {
   return s;
 }
 
+/** Orders whose status or shipping address differs from the seed (cancellations, address changes). */
+function changedOrders(s: Session) {
+  return s.world.orders()
+    .filter((o) => { const seed = SEED.orders.find((x) => x.id === o.id); return !seed || seed.status !== o.status || seed.shipping_address !== o.shipping_address; })
+    .map((o) => ({ order_id: o.id, status: o.status, shipping_address: o.shipping_address }));
+}
+
 function snapshot(s: Session) {
   const w = s.world;
   const verified = s.verifiedCustomerId ? w.customer(s.verifiedCustomerId) : null;
@@ -93,7 +105,7 @@ function snapshot(s: Session) {
     current_step: s.currentStep,
     usage: s.usage,
     trace: s.trace,
-    backend: { refunds: w.refunds(), returns: w.returns(), tickets: w.tickets() },
+    backend: { refunds: w.refunds(), returns: w.returns(), tickets: w.tickets(), orders: changedOrders(s) },
   };
 }
 
@@ -152,23 +164,28 @@ app.post("/api/conversations/:id/messages", async (c) => {
   if (busy.size >= MAX_IN_FLIGHT) return c.json({ error: "The demo is busy right now. Please try again in a few seconds." }, 503);
   // Reserve worst-case spend up front so concurrent turns can't overshoot the budget.
   if (d.messages >= LIMITS.messagesPerDay || d.dollars + d.reserved + TURN_RESERVE_USD > LIMITS.dollarsPerDay) return c.json({ error: "The demo has hit its daily budget. Please try again tomorrow." }, 429);
-  if (overLimit("msg", clientIp(c), LIMITS.messagesPerIpHour)) return c.json({ error: "You've sent a lot of messages this hour. Please try again a bit later." }, 429);
+  const ip = clientIp(c);
+  if (overLimit("msg", ip, LIMITS.messagesPerIpHour)) return c.json({ error: "You've sent a lot of messages this hour. Please try again a bit later." }, 429);
   d.messages += 1;
   d.reserved += TURN_RESERVE_USD;
   busy.add(s.id);
   const costBefore = s.usage.cost_usd;
+  const callsBefore = s.usage.model_calls;
   try {
     const result = await agent.respond(s, text);
     return c.json({ reply: result.reply, ...snapshot(s) });
   } catch (err) {
+    // The agent rolled the turn back, so the conversation stays usable. Never show raw status codes.
     console.error("agent error", err instanceof Anthropic.APIError ? `${err.status} ${err.name}` : err);
     const msg = err instanceof Anthropic.RateLimitError ? "We're getting a lot of traffic. Please try again in a minute."
-      : err instanceof Anthropic.APIError ? `The model API returned an error (${err.status}). Please try again.`
+      : err instanceof Anthropic.APIError || err instanceof TurnTimeoutError ? "Pine is having trouble reaching its AI model right now. Please try again in a moment."
       : "Something went wrong on our side. Please try again.";
     return c.json({ error: msg }, 502);
   } finally {
     d.reserved -= TURN_RESERVE_USD;
     d.dollars += s.usage.cost_usd - costBefore;
+    // A turn that never reached the model costs nothing: don't count it against the limits.
+    if (s.usage.model_calls === callsBefore) { d.messages -= 1; refundHit("msg", ip); }
     saveDay();
     busy.delete(s.id);
   }

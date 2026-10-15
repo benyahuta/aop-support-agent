@@ -1,13 +1,13 @@
 ---
 id: refund_request
 title: Refund for a damaged, defective, wrong, or lost item
-version: 3
+version: 4
 triggers: Customer reports an item arrived damaged, broken, defective, or is the wrong item, or a package never arrived, and wants their money back.
-tools: [verify_identity, lookup_order, track_shipment, issue_refund, escalate_to_human]
+tools: [verify_identity, lookup_order, list_customer_orders, track_shipment, issue_refund, escalate_to_human]
 ---
 
 ## Steps
-1. **Verify identity.** Ask for the order number and checkout email, then call `verify_identity`.
+1. **Verify identity.** Ask for the order number and checkout email, then call `verify_identity`. If they don't know the order number, verify with any order they do know, then call `list_customer_orders` to find the right one.
 2. **Look up the order.** Call `lookup_order` and identify which item(s) are affected and their prices.
 3. **Confirm eligibility.** Damaged, defective, and wrong-item refunds require that the order was delivered within the last 30 days. Lost-package refunds require `track_shipment` to show the package as `stalled`.
    - If the order is outside the 30-day window, explain the policy kindly and offer `escalate_to_human` if they want an exception reviewed. Do not issue a refund.

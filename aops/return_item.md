@@ -1,13 +1,13 @@
 ---
 id: return_item
 title: Return an unwanted item
-version: 1
+version: 2
 triggers: Customer wants to send back an item they no longer want, that doesn't fit, or that they changed their mind about.
-tools: [verify_identity, lookup_order, create_return, escalate_to_human]
+tools: [verify_identity, lookup_order, list_customer_orders, create_return, escalate_to_human]
 ---
 
 ## Steps
-1. **Verify identity.** Ask for the order number and checkout email, then call `verify_identity`.
+1. **Verify identity.** Ask for the order number and checkout email, then call `verify_identity`. If they don't know the order number, verify with any order they do know, then call `list_customer_orders` to find the right one.
 2. **Look up the order.** Call `lookup_order` and confirm which item they want to return.
 3. **Check eligibility.** Returns are accepted within 30 days of delivery for unused items. Items marked `final_sale` cannot be returned for change of mind; if the item is final sale, explain that politely and do not create a return.
 4. **Create the return.** Call `create_return` for the item and share the prepaid label link.

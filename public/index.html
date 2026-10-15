@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Larkspur &amp; Pine Support Agent</title>
   <meta name="description" content="An AOP-driven customer support agent with code-enforced guardrails, human handoff, and a live ops trace." />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -12,24 +13,28 @@
     <div class="brand">
       <span class="logo" aria-hidden="true">▲</span>
       <div>
-        <strong>Larkspur &amp; Pine</strong>
+        <h1 class="brand-name">Larkspur &amp; Pine</h1>
         <span class="sub">Support agent demo · fictional store</span>
       </div>
     </div>
     <div class="meta" id="meta"></div>
-    <a class="gh" href="https://github.com/benyahuta/aop-support-agent" target="_blank" rel="noopener">GitHub</a>
+    <a class="gh" href="https://github.com/benyahuta/aop-support-agent" target="_blank" rel="noopener noreferrer">GitHub</a>
   </header>
 
   <main class="layout">
     <section class="panel chat" aria-label="Customer chat">
       <div class="panel-head">
         <h2>Customer view</h2>
-        <button id="new-conv" class="ghost">New conversation</button>
+        <div class="head-actions">
+          <a class="jump-ops" href="#ops">Jump to ops view</a>
+          <button type="button" id="new-conv" class="ghost">New conversation</button>
+        </div>
       </div>
-      <div id="messages" class="messages" aria-live="polite"></div>
+      <div id="messages" class="messages" role="log" aria-live="polite" aria-label="Conversation" aria-busy="false"></div>
       <form id="composer" class="composer">
-        <input id="input" autocomplete="off" maxlength="1000" placeholder="Message Larkspur &amp; Pine support…" />
+        <textarea id="input" rows="1" autocomplete="off" aria-label="Message to support" aria-describedby="counter" placeholder="Message support…"></textarea>
         <button type="submit" id="send">Send</button>
+        <div id="counter" class="counter hidden" aria-live="polite"></div>
       </form>
       <details class="accounts" open>
         <summary>Demo accounts <span class="muted">(all fictional; click to copy into the chat)</span></summary>
@@ -37,19 +42,20 @@
       </details>
     </section>
 
-    <section class="panel ops" aria-label="Ops view">
+    <section class="panel ops" id="ops" tabindex="-1" aria-label="Ops view">
       <div class="panel-head">
         <h2>Ops view</h2>
-        <div class="tabs" role="tablist">
-          <button role="tab" data-tab="trace" class="active">Trace</button>
-          <button role="tab" data-tab="backend">Backend</button>
-          <button role="tab" data-tab="aops">AOPs</button>
+        <div class="tabs" role="tablist" aria-label="Ops views">
+          <button type="button" role="tab" id="tabbtn-trace" data-tab="trace" aria-controls="tab-trace" aria-selected="true" tabindex="0" class="active">Trace</button>
+          <button type="button" role="tab" id="tabbtn-backend" data-tab="backend" aria-controls="tab-backend" aria-selected="false" tabindex="-1">Backend</button>
+          <button type="button" role="tab" id="tabbtn-aops" data-tab="aops" aria-controls="tab-aops" aria-selected="false" tabindex="-1">AOPs</button>
         </div>
       </div>
       <div class="state" id="state"></div>
-      <div class="tab-body" id="tab-trace"><ol id="trace" class="trace"></ol></div>
-      <div class="tab-body hidden" id="tab-backend"></div>
-      <div class="tab-body hidden" id="tab-aops"></div>
+      <div id="ops-notice" class="ops-notice hidden" role="status" aria-live="polite"></div>
+      <div class="tab-body" id="tab-trace" role="tabpanel" aria-labelledby="tabbtn-trace" tabindex="0"><ol id="trace" class="trace"></ol></div>
+      <div class="tab-body hidden" id="tab-backend" role="tabpanel" aria-labelledby="tabbtn-backend" tabindex="0"></div>
+      <div class="tab-body hidden" id="tab-aops" role="tabpanel" aria-labelledby="tabbtn-aops" tabindex="0"></div>
     </section>
   </main>
   <script src="app.js" type="module"></script>

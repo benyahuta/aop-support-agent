@@ -58,7 +58,7 @@ export const SEED: { customers: Array<{ id: string; name: string; email: string;
       items: [{ ...LAMP, qty: 1 }],
       shipment: { carrier: "USPS", tracking: "9400111LP1002", status: "in_transit", eta: "2026-10-13", last_event: "Departed regional facility, Sacramento CA", last_event_at: "2026-10-09T22:10:00Z" } },
     // Cancel / change address happy paths (not yet shipped)
-    { id: "LP-1003", hint: "Cancel it, or change the shipping address", customer_id: "C-002", status: "processing", placed_at: "2026-10-09T18:30:00Z", shipping_address: "2210 Pearl St, Boulder, CO 80302",
+    { id: "LP-1003", hint: "Cancel it, or change the address. Try 'cancel it, I'm sure' in one message: the code still requires a confirmation turn.", customer_id: "C-002", status: "processing", placed_at: "2026-10-09T18:30:00Z", shipping_address: "2210 Pearl St, Boulder, CO 80302",
       items: [{ ...PACK, qty: 1 }, { ...LAMP, qty: 1 }] },
     // Outside the 30-day window
     { id: "LP-1004", hint: "Base layer has a hole (delivered 51 days ago)", customer_id: "C-002", status: "delivered", placed_at: "2026-08-14T10:00:00Z", delivered_at: "2026-08-20T16:00:00Z",
