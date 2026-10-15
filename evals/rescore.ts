@@ -1,8 +1,8 @@
 // Re-apply a corrected text-only check to a saved run without re-running the
 // conversations, and record that it happened.
 //   node evals/rescore.ts <label> <scenario-id-prefix>
-// Only valid for checks that read replies (not backend state), since saved runs
-// keep transcripts but not the database.
+// Only checks marked textOnly are recomputed; saved runs keep transcripts but
+// not the database, so state checks keep their recorded result.
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { ROOT } from "../src/config.ts";
@@ -18,7 +18,8 @@ for (const r of run.results) {
   if (!r.id.startsWith(prefix)) continue;
   const scenario = SCENARIOS.find((s) => s.id === r.id)!;
   const replies = r.transcript.filter((t: any) => t.role === "agent").map((t: any) => t.text);
-  r.checks = scenario.checks.map((c) => ({ name: c.name, ...c.run({ replies, transcript: r.transcript, session: null as any }) }));
+  // Re-run text-only checks; keep saved results for checks that need the backend state.
+  r.checks = scenario.checks.map((c, i) => (c.textOnly ? { name: c.name, ...c.run({ replies, transcript: r.transcript, session: null as any }) } : r.checks[i]));
   const before = r.pass;
   r.checks_pass = !r.error && r.checks.every((c: any) => c.pass);
   r.pass = r.checks_pass && r.judge_pass;

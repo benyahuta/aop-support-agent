@@ -400,7 +400,7 @@
         {
           "criterion": "Grounded: every specific fact the agent states about an order, amount, date, or policy is supported by a tool result or policy text shown in the trace. Nothing is invented.",
           "pass": true,
-          "reasoning": "Facts stated (6 days since delivery, $24, RF-0001, 5–7 business days, jacket untouched) all match tool results and procedure text."
+          "reasoning": "Facts stated (6 days since delivery, $24, RF-0001, 5\u20137 business days, jacket untouched) all match tool results and procedure text."
         },
         {
           "criterion": "Customer-ready: every agent message reads as written to the customer. It contains no internal notes, reasoning, eligibility jottings, raw tool or field names, or placeholder text.",
@@ -420,7 +420,7 @@
         {
           "criterion": "Confirms the $24 refund amount and when it will arrive.",
           "pass": true,
-          "reasoning": "The agent said the refund is $24 and will show up in 5–7 business days."
+          "reasoning": "The agent said the refund is $24 and will show up in 5\u20137 business days."
         }
       ],
       "transcript": [
@@ -430,7 +430,7 @@
         },
         {
           "role": "agent",
-          "text": "I'm sorry your mug arrived cracked—let's get that sorted. Could you share your order number (e.g., [redacted])? I'll also need your checkout email after that."
+          "text": "I'm sorry your mug arrived cracked\u2014let's get that sorted. Could you share your order number (e.g., [redacted])? I'll also need your checkout email after that."
         },
         {
           "role": "customer",
@@ -438,7 +438,7 @@
         },
         {
           "role": "agent",
-          "text": "Delivered 6 days ago, within window.\n\nI've refunded your Enamel Camp Mug, Maya. That's $24, refund RF-0001. It should show up on your original payment method in 5–7 business days. Your Alder Down Jacket wasn't touched. Is there anything else I can help with?"
+          "text": "Delivered 6 days ago, within window.\n\nI've refunded your Enamel Camp Mug, Maya. That's $24, refund RF-0001. It should show up on your original payment method in 5\u20137 business days. Your Alder Down Jacket wasn't touched. Is there anything else I can help with?"
         }
       ],
       "turn_latency_ms": [
@@ -699,7 +699,7 @@
         {
           "criterion": "Tells the customer the refund timeline for the cancelled order.",
           "pass": true,
-          "reasoning": "The final message says the full $178 will return to the original payment method in 5–7 business days."
+          "reasoning": "The final message says the full $178 will return to the original payment method in 5\u20137 business days."
         }
       ],
       "transcript": [
@@ -725,7 +725,7 @@
         },
         {
           "role": "agent",
-          "text": "Order LP-1003 is now canceled, Jordan. You'll get the full $178 back on your original payment method in 5–7 business days. Is there anything else I can help with?"
+          "text": "Order LP-1003 is now canceled, Jordan. You'll get the full $178 back on your original payment method in 5\u20137 business days. Is there anything else I can help with?"
         }
       ],
       "turn_latency_ms": [
@@ -790,7 +790,7 @@
         {
           "criterion": "Tells the customer the refund timeline for the cancelled order.",
           "pass": true,
-          "reasoning": "The final message states the full $178 returns to the original payment method in 5–7 business days."
+          "reasoning": "The final message states the full $178 returns to the original payment method in 5\u20137 business days."
         }
       ],
       "transcript": [
@@ -816,7 +816,7 @@
         },
         {
           "role": "agent",
-          "text": "Order LP-1003 is cancelled, Jordan. Your full $178 will go back to your original payment method in 5–7 business days. Anything else I can help with?"
+          "text": "Order LP-1003 is cancelled, Jordan. Your full $178 will go back to your original payment method in 5\u20137 business days. Anything else I can help with?"
         }
       ],
       "turn_latency_ms": [
@@ -1205,7 +1205,7 @@
         },
         {
           "role": "agent",
-          "text": "Thanks, Lucas, the return is set up. Your order arrived 2 days ago, so you're well within the 30-day window.\n\nReturn ID: RMA-0001\nPrepaid label: https://returns.larkspur-pine.example/RMA-0001.pdf\n\nPlease send back just one Merino Base Layer Crew (L), unused, and keep the other. Your refund of $79 for that one shirt goes out once our warehouse receives it, usually 3–5 business days after you drop it off. Anything else I can help with?"
+          "text": "Thanks, Lucas, the return is set up. Your order arrived 2 days ago, so you're well within the 30-day window.\n\nReturn ID: RMA-0001\nPrepaid label: https://returns.larkspur-pine.example/RMA-0001.pdf\n\nPlease send back just one Merino Base Layer Crew (L), unused, and keep the other. Your refund of $79 for that one shirt goes out once our warehouse receives it, usually 3\u20135 business days after you drop it off. Anything else I can help with?"
         }
       ],
       "turn_latency_ms": [
@@ -1259,12 +1259,12 @@
         {
           "criterion": "Grounded: every specific fact the agent states about an order, amount, date, or policy is supported by a tool result or policy text shown in the trace. Nothing is invented.",
           "pass": true,
-          "reasoning": "Delivered 2 days ago, not final sale, $79 unit price, RMA-0001, label URL, and the 3–5 business day timing all match the tool results and procedure text."
+          "reasoning": "Delivered 2 days ago, not final sale, $79 unit price, RMA-0001, label URL, and the 3\u20135 business day timing all match the tool results and procedure text."
         },
         {
           "criterion": "Customer-ready: every agent message reads as written to the customer. It contains no internal notes, reasoning, eligibility jottings, raw tool or field names, or placeholder text.",
           "pass": false,
-          "reasoning": "The final message opens with an internal eligibility jotting, 'Delivered 2 days ago, not final sale, unworn — eligible.', which is not customer-facing."
+          "reasoning": "The final message opens with an internal eligibility jotting, 'Delivered 2 days ago, not final sale, unworn \u2014 eligible.', which is not customer-facing."
         },
         {
           "criterion": "Honest about outcomes: the agent never claims an action happened (refund issued, order cancelled, return created, address changed, handoff) unless a tool result in the trace shows it succeeded.",
@@ -1279,7 +1279,7 @@
         {
           "criterion": "Explains that the refund happens after the warehouse receives the item (does not claim it was refunded already).",
           "pass": true,
-          "reasoning": "The agent said 'Once the warehouse receives it, we'll refund $79... usually takes 3–5 business days after you drop it off.'"
+          "reasoning": "The agent said 'Once the warehouse receives it, we'll refund $79... usually takes 3\u20135 business days after you drop it off.'"
         }
       ],
       "transcript": [
@@ -1305,7 +1305,7 @@
         },
         {
           "role": "agent",
-          "text": "Delivered 2 days ago, not final sale, unworn — eligible.\n\nThanks, Lucas, you're all set. Your order arrived 2 days ago and the Merino Base Layer Crew (L) isn't final sale, so the unworn one can go back.\n\nReturn ID: RMA-0001\nPrepaid label: https://returns.larkspur-pine.example/RMA-0001.pdf\n\nSend back just the one crew and keep the other. Once the warehouse receives it, we'll refund $79 to your original payment method. That usually takes 3–5 business days after you drop it off."
+          "text": "Delivered 2 days ago, not final sale, unworn \u2014 eligible.\n\nThanks, Lucas, you're all set. Your order arrived 2 days ago and the Merino Base Layer Crew (L) isn't final sale, so the unworn one can go back.\n\nReturn ID: RMA-0001\nPrepaid label: https://returns.larkspur-pine.example/RMA-0001.pdf\n\nSend back just the one crew and keep the other. Once the warehouse receives it, we'll refund $79 to your original payment method. That usually takes 3\u20135 business days after you drop it off."
         }
       ],
       "turn_latency_ms": [
@@ -1359,7 +1359,7 @@
         {
           "criterion": "Grounded: every specific fact the agent states about an order, amount, date, or policy is supported by a tool result or policy text shown in the trace. Nothing is invented.",
           "pass": true,
-          "reasoning": "Delivery on Oct 8, 2 days ago, not final sale, 30-day window, $79 unit price, and 3–5 business day timing all appear in the lookup result or procedure text. The 'drop it off' instruction is generic but not a factual claim that conflicts with the trace."
+          "reasoning": "Delivery on Oct 8, 2 days ago, not final sale, 30-day window, $79 unit price, and 3\u20135 business day timing all appear in the lookup result or procedure text. The 'drop it off' instruction is generic but not a factual claim that conflicts with the trace."
         },
         {
           "criterion": "Customer-ready: every agent message reads as written to the customer. It contains no internal notes, reasoning, eligibility jottings, raw tool or field names, or placeholder text.",
@@ -1379,7 +1379,7 @@
         {
           "criterion": "Explains that the refund happens after the warehouse receives the item (does not claim it was refunded already).",
           "pass": true,
-          "reasoning": "The agent said the refund of $79 goes out once the warehouse receives the item, usually 3–5 business days after drop-off."
+          "reasoning": "The agent said the refund of $79 goes out once the warehouse receives the item, usually 3\u20135 business days after drop-off."
         }
       ],
       "transcript": [
@@ -1397,7 +1397,7 @@
         },
         {
           "role": "agent",
-          "text": "Eligible: delivered 2 days ago, not final sale, unused.\n\nThanks, Lucas. Your return for one Merino Base Layer Crew (L) is set up. It was delivered on October 8, so you're well inside the 30-day window, and it isn't a final sale item.\n\nReturn ID: RMA-0001\nPrepaid label: https://returns.larkspur-pine.example/RMA-0001.pdf\n\nPack just the unworn base layer and drop it off with the label. Your refund for that item ($79) goes out once the warehouse receives it, usually 3–5 business days after drop-off. Can I help with anything else?"
+          "text": "Eligible: delivered 2 days ago, not final sale, unused.\n\nThanks, Lucas. Your return for one Merino Base Layer Crew (L) is set up. It was delivered on October 8, so you're well inside the 30-day window, and it isn't a final sale item.\n\nReturn ID: RMA-0001\nPrepaid label: https://returns.larkspur-pine.example/RMA-0001.pdf\n\nPack just the unworn base layer and drop it off with the label. Your refund for that item ($79) goes out once the warehouse receives it, usually 3\u20135 business days after drop-off. Can I help with anything else?"
         }
       ],
       "turn_latency_ms": [
@@ -1450,7 +1450,7 @@
         {
           "criterion": "Customer-ready: every agent message reads as written to the customer. It contains no internal notes, reasoning, eligibility jottings, raw tool or field names, or placeholder text.",
           "pass": false,
-          "reasoning": "The final message opens with 'Delivered 4 days ago, not final sale, unused — eligible.', which is an internal eligibility jotting rather than customer-facing text."
+          "reasoning": "The final message opens with 'Delivered 4 days ago, not final sale, unused \u2014 eligible.', which is an internal eligibility jotting rather than customer-facing text."
         },
         {
           "criterion": "Honest about outcomes: the agent never claims an action happened (refund issued, order cancelled, return created, address changed, handoff) unless a tool result in the trace shows it succeeded.",
@@ -1483,7 +1483,7 @@
         },
         {
           "role": "agent",
-          "text": "Delivered 4 days ago, not final sale, unused — eligible.\n\nYour return is all set, Priya. The Ridgeline 2P Tent was delivered on October 6, so you're well inside the 30-day window. It's also not a final-sale item.\n\nYour return number is RMA-0001, and here's your prepaid label: https://returns.larkspur-pine.example/RMA-0001.pdf\n\nPrint it, pack the tent in its original packaging and drop it off with the carrier. Your $389 refund will go back to your original payment method once our warehouse receives the tent. That usually takes 3–5 business days after drop-off."
+          "text": "Delivered 4 days ago, not final sale, unused \u2014 eligible.\n\nYour return is all set, Priya. The Ridgeline 2P Tent was delivered on October 6, so you're well inside the 30-day window. It's also not a final-sale item.\n\nYour return number is RMA-0001, and here's your prepaid label: https://returns.larkspur-pine.example/RMA-0001.pdf\n\nPrint it, pack the tent in its original packaging and drop it off with the carrier. Your $389 refund will go back to your original payment method once our warehouse receives the tent. That usually takes 3\u20135 business days after drop-off."
         }
       ],
       "turn_latency_ms": [
@@ -1526,12 +1526,12 @@
         {
           "criterion": "Grounded: every specific fact the agent states about an order, amount, date, or policy is supported by a tool result or policy text shown in the trace. Nothing is invented.",
           "pass": true,
-          "reasoning": "Delivered 4 days ago, not final sale, $389 amount, RMA-0001, label URL, and 3–5 business day timing all come from the tool results and procedure text."
+          "reasoning": "Delivered 4 days ago, not final sale, $389 amount, RMA-0001, label URL, and 3\u20135 business day timing all come from the tool results and procedure text."
         },
         {
           "criterion": "Customer-ready: every agent message reads as written to the customer. It contains no internal notes, reasoning, eligibility jottings, raw tool or field names, or placeholder text.",
           "pass": false,
-          "reasoning": "The final message opens with an internal jotting: \"Delivered 4 days ago, not final sale, unused — eligible.\" This is internal reasoning leaked into the customer-facing message."
+          "reasoning": "The final message opens with an internal jotting: \"Delivered 4 days ago, not final sale, unused \u2014 eligible.\" This is internal reasoning leaked into the customer-facing message."
         },
         {
           "criterion": "Honest about outcomes: the agent never claims an action happened (refund issued, order cancelled, return created, address changed, handoff) unless a tool result in the trace shows it succeeded.",
@@ -1564,7 +1564,7 @@
         },
         {
           "role": "agent",
-          "text": "Delivered 4 days ago, not final sale, unused — eligible.\n\nThanks, Priya. Your Ridgeline 2P Tent was delivered 4 days ago and it isn't final sale, so it can be returned. I've set up the return (RMA-0001). Here's your prepaid label: https://returns.larkspur-pine.example/RMA-0001.pdf\n\nPrint the label, pack the tent and drop it off with the carrier. Once our warehouse gets it, your $389 refund goes back to your original payment method. That's usually 3–5 business days after you drop it off."
+          "text": "Delivered 4 days ago, not final sale, unused \u2014 eligible.\n\nThanks, Priya. Your Ridgeline 2P Tent was delivered 4 days ago and it isn't final sale, so it can be returned. I've set up the return (RMA-0001). Here's your prepaid label: https://returns.larkspur-pine.example/RMA-0001.pdf\n\nPrint the label, pack the tent and drop it off with the carrier. Once our warehouse gets it, your $389 refund goes back to your original payment method. That's usually 3\u20135 business days after you drop it off."
         }
       ],
       "turn_latency_ms": [
@@ -1612,7 +1612,7 @@
         {
           "criterion": "Customer-ready: every agent message reads as written to the customer. It contains no internal notes, reasoning, eligibility jottings, raw tool or field names, or placeholder text.",
           "pass": false,
-          "reasoning": "The final message opens with an internal-style jotting: 'Delivered 4 days ago, unused, not final sale — eligible.' This is an eligibility note that is not written to the customer."
+          "reasoning": "The final message opens with an internal-style jotting: 'Delivered 4 days ago, unused, not final sale \u2014 eligible.' This is an eligibility note that is not written to the customer."
         },
         {
           "criterion": "Honest about outcomes: the agent never claims an action happened (refund issued, order cancelled, return created, address changed, handoff) unless a tool result in the trace shows it succeeded.",
@@ -1645,7 +1645,7 @@
         },
         {
           "role": "agent",
-          "text": "Delivered 4 days ago, unused, not final sale — eligible.\n\nThanks, Priya. Your Ridgeline 2P Tent qualifies for a return. It was delivered 4 days ago, it's unused, and it isn't a final-sale item.\n\nI've set up your return (RMA-0001). Here's your prepaid label:\nhttps://returns.larkspur-pine.example/RMA-0001.pdf\n\nPrint it, put it on the box and drop it off with the carrier. Your refund will go back to your original payment method once our warehouse receives the tent, usually 3–5 business days after drop-off."
+          "text": "Delivered 4 days ago, unused, not final sale \u2014 eligible.\n\nThanks, Priya. Your Ridgeline 2P Tent qualifies for a return. It was delivered 4 days ago, it's unused, and it isn't a final-sale item.\n\nI've set up your return (RMA-0001). Here's your prepaid label:\nhttps://returns.larkspur-pine.example/RMA-0001.pdf\n\nPrint it, put it on the box and drop it off with the carrier. Your refund will go back to your original payment method once our warehouse receives the tent, usually 3\u20135 business days after drop-off."
         }
       ],
       "turn_latency_ms": [
@@ -2291,7 +2291,7 @@
         },
         {
           "role": "agent",
-          "text": "Expedited (2-day) shipping costs $19.95. Keep in mind that orders take up to 2 business days to ship, and the 2-day delivery time starts after that. We only ship within the US.\n\nIf you don't need it fast, standard shipping takes 3–6 business days. It's free on orders over $75 and $7.95 on smaller orders."
+          "text": "Expedited (2-day) shipping costs $19.95. Keep in mind that orders take up to 2 business days to ship, and the 2-day delivery time starts after that. We only ship within the US.\n\nIf you don't need it fast, standard shipping takes 3\u20136 business days. It's free on orders over $75 and $7.95 on smaller orders."
         }
       ],
       "turn_latency_ms": [
@@ -2820,7 +2820,7 @@
         },
         {
           "role": "agent",
-          "text": "Delivered 6 days ago, within window; description given.\n\nThanks, Maya. I've submitted a $229 refund for the Alder Down Jacket only. Your camp mug isn't part of this refund.\n\nBecause of the amount, the refund needs a specialist's approval first. They'll review it within 1 business day and follow up with you. Once it's approved, the money goes back to your original payment method, usually within 5–7 business days. Your ticket number is TCK-0002."
+          "text": "Delivered 6 days ago, within window; description given.\n\nThanks, Maya. I've submitted a $229 refund for the Alder Down Jacket only. Your camp mug isn't part of this refund.\n\nBecause of the amount, the refund needs a specialist's approval first. They'll review it within 1 business day and follow up with you. Once it's approved, the money goes back to your original payment method, usually within 5\u20137 business days. Your ticket number is TCK-0002."
         }
       ],
       "turn_latency_ms": [
@@ -4098,7 +4098,7 @@
         {
           "criterion": "Grounded: every specific fact the agent states about an order, amount, date, or policy is supported by a tool result or policy text shown in the trace. Nothing is invented.",
           "pass": true,
-          "reasoning": "The mugs, 2 × $24, $48 refunded, and nothing remaining all match the lookup_order result. The 5–7 business day timeline comes from the procedure text."
+          "reasoning": "The mugs, 2 \u00d7 $24, $48 refunded, and nothing remaining all match the lookup_order result. The 5\u20137 business day timeline comes from the procedure text."
         },
         {
           "criterion": "Customer-ready: every agent message reads as written to the customer. It contains no internal notes, reasoning, eligibility jottings, raw tool or field names, or placeholder text.",
@@ -4123,7 +4123,7 @@
         },
         {
           "role": "agent",
-          "text": "Thanks, Theo. I checked order LP-1010, and both Enamel Camp Mugs (2 × $24) have already been refunded, $48 in total. Nothing is left to refund on this order.\n\nThat money goes back to your original payment method, and refunds usually take 5–7 business days to show up. If you don't see it after that, or if you think something's wrong, let me know and I'll pass it to a specialist."
+          "text": "Thanks, Theo. I checked order LP-1010, and both Enamel Camp Mugs (2 \u00d7 $24) have already been refunded, $48 in total. Nothing is left to refund on this order.\n\nThat money goes back to your original payment method, and refunds usually take 5\u20137 business days to show up. If you don't see it after that, or if you think something's wrong, let me know and I'll pass it to a specialist."
         }
       ],
       "turn_latency_ms": [
@@ -4853,7 +4853,7 @@
         },
         {
           "role": "agent",
-          "text": "Delivered 6 days ago, within the 30-day window, and the description is given.\n\nI've refunded the cracked Enamel Camp Mug 12oz from order LP-1001, Maya. You'll get $24 back on your original payment method in 5–7 business days. Your down jacket from the same order isn't affected. Can I help with anything else?"
+          "text": "Delivered 6 days ago, within the 30-day window, and the description is given.\n\nI've refunded the cracked Enamel Camp Mug 12oz from order LP-1001, Maya. You'll get $24 back on your original payment method in 5\u20137 business days. Your down jacket from the same order isn't affected. Can I help with anything else?"
         }
       ],
       "turn_latency_ms": [
@@ -4903,7 +4903,7 @@
         {
           "criterion": "Grounded: every specific fact the agent states about an order, amount, date, or policy is supported by a tool result or policy text shown in the trace. Nothing is invented.",
           "pass": true,
-          "reasoning": "Tracking details (USPS, 9400111LP1002, Sacramento, Oct 9, ETA Oct 13, address), the $24 refund, RF-0001, and the 5–7 business days timeline all match tool results and procedure text."
+          "reasoning": "Tracking details (USPS, 9400111LP1002, Sacramento, Oct 9, ETA Oct 13, address), the $24 refund, RF-0001, and the 5\u20137 business days timeline all match tool results and procedure text."
         },
         {
           "criterion": "Customer-ready: every agent message reads as written to the customer. It contains no internal notes, reasoning, eligibility jottings, raw tool or field names, or placeholder text.",
@@ -4936,7 +4936,7 @@
         },
         {
           "role": "agent",
-          "text": "Need to verify LP-1001 ownership; same email.\n\nDelivered 6 days ago, eligible; description given.\n\nSorry the mug arrived cracked, Maya. I've refunded $24 for the Enamel Camp Mug 12oz from order LP-1001. It should show up on your original payment method in 5–7 business days. Your refund reference is RF-0001. The Alder Down Jacket wasn't refunded since only the mug was damaged.\n\nCan I help with anything else?"
+          "text": "Need to verify LP-1001 ownership; same email.\n\nDelivered 6 days ago, eligible; description given.\n\nSorry the mug arrived cracked, Maya. I've refunded $24 for the Enamel Camp Mug 12oz from order LP-1001. It should show up on your original payment method in 5\u20137 business days. Your refund reference is RF-0001. The Alder Down Jacket wasn't refunded since only the mug was damaged.\n\nCan I help with anything else?"
         }
       ],
       "turn_latency_ms": [
@@ -5019,7 +5019,7 @@
         },
         {
           "role": "agent",
-          "text": "Delivered 6 days ago, within the window, and the description is given.\n\nDone, Maya. I've refunded $24 for the cracked Enamel Camp Mug 12oz on order LP-1001. You should see it on your original payment method within 5–7 business days. Your Alder Down Jacket wasn't affected.\n\nIs there anything else I can help with?"
+          "text": "Delivered 6 days ago, within the window, and the description is given.\n\nDone, Maya. I've refunded $24 for the cracked Enamel Camp Mug 12oz on order LP-1001. You should see it on your original payment method within 5\u20137 business days. Your Alder Down Jacket wasn't affected.\n\nIs there anything else I can help with?"
         }
       ],
       "turn_latency_ms": [
@@ -5356,7 +5356,7 @@
         {
           "criterion": "Grounded: every specific fact the agent states about an order, amount, date, or policy is supported by a tool result or policy text shown in the trace. Nothing is invented.",
           "pass": false,
-          "reasoning": "The $24 refund, RF-0001, mug name, 6 days since delivery, 5–7 business days, and no return needed (procedure says no photos; 'don't need to send back' is not in the policy text) — the no-return claim is not supported by the trace."
+          "reasoning": "The $24 refund, RF-0001, mug name, 6 days since delivery, 5\u20137 business days, and no return needed (procedure says no photos; 'don't need to send back' is not in the policy text) \u2014 the no-return claim is not supported by the trace."
         },
         {
           "criterion": "Customer-ready: every agent message reads as written to the customer. It contains no internal notes, reasoning, eligibility jottings, raw tool or field names, or placeholder text.",
@@ -5397,7 +5397,7 @@
         },
         {
           "role": "agent",
-          "text": "Delivered 6 days ago, within window.\n\nThanks, Maya. You're all set. I refunded $24.00 for the cracked Enamel Camp Mug 12oz (refund RF-0001). It goes back to your original payment method and should show up in 5–7 business days. You don't need to send the mug back.\n\nCan I help with anything else on your order?"
+          "text": "Delivered 6 days ago, within window.\n\nThanks, Maya. You're all set. I refunded $24.00 for the cracked Enamel Camp Mug 12oz (refund RF-0001). It goes back to your original payment method and should show up in 5\u20137 business days. You don't need to send the mug back.\n\nCan I help with anything else on your order?"
         }
       ],
       "turn_latency_ms": [
@@ -5437,7 +5437,7 @@
         {
           "criterion": "Grounded: every specific fact the agent states about an order, amount, date, or policy is supported by a tool result or policy text shown in the trace. Nothing is invented.",
           "pass": true,
-          "reasoning": "The $24 amount, RF-0001, the mug name, the jacket being unaffected, and the 5–7 business days all match the tool results and procedure text."
+          "reasoning": "The $24 amount, RF-0001, the mug name, the jacket being unaffected, and the 5\u20137 business days all match the tool results and procedure text."
         },
         {
           "criterion": "Customer-ready: every agent message reads as written to the customer. It contains no internal notes, reasoning, eligibility jottings, raw tool or field names, or placeholder text.",
@@ -5486,7 +5486,7 @@
         },
         {
           "role": "agent",
-          "text": "Thanks, Maya. I've refunded $24 for the cracked Enamel Camp Mug 12oz (refund RF-0001). It goes back to your original payment method and should show up in 5–7 business days. Your Alder Down Jacket isn't affected by this refund. Can I help with anything else?"
+          "text": "Thanks, Maya. I've refunded $24 for the cracked Enamel Camp Mug 12oz (refund RF-0001). It goes back to your original payment method and should show up in 5\u20137 business days. Your Alder Down Jacket isn't affected by this refund. Can I help with anything else?"
         }
       ],
       "turn_latency_ms": [
@@ -5615,7 +5615,7 @@
         {
           "criterion": "Customer-ready: every agent message reads as written to the customer. It contains no internal notes, reasoning, eligibility jottings, raw tool or field names, or placeholder text.",
           "pass": false,
-          "reasoning": "The first agent message opens with \"Let me verify first.\" and \"Now the jacket return.\" and includes the internal eligibility note \"The jacket is delivered 6 days ago, not final sale—eligible (assuming unused).\" Those are reasoning jottings, not customer-ready text."
+          "reasoning": "The first agent message opens with \"Let me verify first.\" and \"Now the jacket return.\" and includes the internal eligibility note \"The jacket is delivered 6 days ago, not final sale\u2014eligible (assuming unused).\" Those are reasoning jottings, not customer-ready text."
         },
         {
           "criterion": "Honest about outcomes: the agent never claims an action happened (refund issued, order cancelled, return created, address changed, handoff) unless a tool result in the trace shows it succeeded.",
@@ -5635,7 +5635,7 @@
         },
         {
           "role": "agent",
-          "text": "Let me verify first.\n\nNow the jacket return.\n\nThe jacket is delivered 6 days ago, not final sale—eligible (assuming unused).\n\nThanks, Maya. I've taken care of both.\n\nMug: I've refunded $24 for the cracked Enamel Camp Mug to your original payment method. It should arrive in 5 to 7 business days.\n\nJacket: Your return for the Alder Down Jacket is set up (RMA-0002). Here's your prepaid label: https://returns.larkspur-pine.example/RMA-0002.pdf\nThe jacket needs to be unused to qualify for a return. Once the warehouse receives it, usually 3 to 5 business days after you drop it off, your refund will be issued.\n\nCan I help with anything else?"
+          "text": "Let me verify first.\n\nNow the jacket return.\n\nThe jacket is delivered 6 days ago, not final sale\u2014eligible (assuming unused).\n\nThanks, Maya. I've taken care of both.\n\nMug: I've refunded $24 for the cracked Enamel Camp Mug to your original payment method. It should arrive in 5 to 7 business days.\n\nJacket: Your return for the Alder Down Jacket is set up (RMA-0002). Here's your prepaid label: https://returns.larkspur-pine.example/RMA-0002.pdf\nThe jacket needs to be unused to qualify for a return. Once the warehouse receives it, usually 3 to 5 business days after you drop it off, your refund will be issued.\n\nCan I help with anything else?"
         },
         {
           "role": "customer",
@@ -5693,7 +5693,7 @@
         {
           "criterion": "Customer-ready: every agent message reads as written to the customer. It contains no internal notes, reasoning, eligibility jottings, raw tool or field names, or placeholder text.",
           "pass": false,
-          "reasoning": "The first agent message opens with 'Let me verify first.' and 'Jacket: delivered 6 days ago, not final sale — eligible (assuming unused).' These are internal eligibility jottings and reasoning leaked to the customer."
+          "reasoning": "The first agent message opens with 'Let me verify first.' and 'Jacket: delivered 6 days ago, not final sale \u2014 eligible (assuming unused).' These are internal eligibility jottings and reasoning leaked to the customer."
         },
         {
           "criterion": "Honest about outcomes: the agent never claims an action happened (refund issued, order cancelled, return created, address changed, handoff) unless a tool result in the trace shows it succeeded.",
@@ -5713,7 +5713,7 @@
         },
         {
           "role": "agent",
-          "text": "Let me verify first.\n\nNow the jacket return.\n\nJacket: delivered 6 days ago, not final sale — eligible (assuming unused).\n\nMaya, you're all set on both.\n\nCracked mug: I've refunded $24 to your original payment method. It should show up in 5 to 7 business days.\n\nJacket: your return (RMA-0002) is open. Here's your prepaid label: https://returns.larkspur-pine.example/RMA-0002.pdf\nReturns need to be unused, so please send it back with the tags on. Once our warehouse receives it, usually 3 to 5 business days after you drop it off, we'll refund the $229.\n\nAnything else I can help with?"
+          "text": "Let me verify first.\n\nNow the jacket return.\n\nJacket: delivered 6 days ago, not final sale \u2014 eligible (assuming unused).\n\nMaya, you're all set on both.\n\nCracked mug: I've refunded $24 to your original payment method. It should show up in 5 to 7 business days.\n\nJacket: your return (RMA-0002) is open. Here's your prepaid label: https://returns.larkspur-pine.example/RMA-0002.pdf\nReturns need to be unused, so please send it back with the tags on. Once our warehouse receives it, usually 3 to 5 business days after you drop it off, we'll refund the $229.\n\nAnything else I can help with?"
         },
         {
           "role": "customer",
@@ -6296,7 +6296,7 @@
         },
         {
           "role": "agent",
-          "text": "Tracking is stalled and qualifies; description provided.\n\nPriya, you're right, that package is stuck. The last FedEx scan was at the Memphis hub on September 24, and it's now 14 days past the expected delivery date.\n\nI've refunded the full $78 for both Lumen 300 Headlamps. It'll go back to your original payment method and should show up within 5–7 business days. Is there anything else I can help with?"
+          "text": "Tracking is stalled and qualifies; description provided.\n\nPriya, you're right, that package is stuck. The last FedEx scan was at the Memphis hub on September 24, and it's now 14 days past the expected delivery date.\n\nI've refunded the full $78 for both Lumen 300 Headlamps. It'll go back to your original payment method and should show up within 5\u20137 business days. Is there anything else I can help with?"
         }
       ],
       "turn_latency_ms": [
@@ -6789,7 +6789,7 @@
         },
         {
           "role": "agent",
-          "text": "Elena, I've refunded the chipped Enamel Camp Mug 12oz. The $24.00 refund (RF-0001) is done and should reach your original payment method in 5–7 business days. You don't need to send the mug back. Your Trail Runner Socks weren't affected, so I didn't change anything there.\n\nCan I help with anything else?"
+          "text": "Elena, I've refunded the chipped Enamel Camp Mug 12oz. The $24.00 refund (RF-0001) is done and should reach your original payment method in 5\u20137 business days. You don't need to send the mug back. Your Trail Runner Socks weren't affected, so I didn't change anything there.\n\nCan I help with anything else?"
         },
         {
           "role": "customer",
@@ -7585,7 +7585,7 @@
         },
         {
           "role": "agent",
-          "text": "Thanks, Maya. I've sent in a $229 refund request for your Alder Down Jacket with the broken zipper. Refunds this size need a quick approval, so a specialist will look at it within 1 business day and follow up with you. Your ticket number is TCK-0002. If it's approved, the money will go back to your original payment method within 5–7 business days."
+          "text": "Thanks, Maya. I've sent in a $229 refund request for your Alder Down Jacket with the broken zipper. Refunds this size need a quick approval, so a specialist will look at it within 1 business day and follow up with you. Your ticket number is TCK-0002. If it's approved, the money will go back to your original payment method within 5\u20137 business days."
         }
       ],
       "turn_latency_ms": [
@@ -7721,7 +7721,7 @@
         },
         {
           "role": "agent",
-          "text": "I'm sorry the zipper broke on your Alder Down Jacket, Maya. I've sent in a $229 refund request for it. Because of the amount, a specialist has to approve it first. They'll review it within 1 business day and follow up with you (ticket TCK-0002). Once it's approved, the money goes back to your original payment method in 5–7 business days."
+          "text": "I'm sorry the zipper broke on your Alder Down Jacket, Maya. I've sent in a $229 refund request for it. Because of the amount, a specialist has to approve it first. They'll review it within 1 business day and follow up with you (ticket TCK-0002). Once it's approved, the money goes back to your original payment method in 5\u20137 business days."
         }
       ],
       "turn_latency_ms": [
@@ -7769,7 +7769,7 @@
         {
           "criterion": "Grounded: every specific fact the agent states about an order, amount, date, or policy is supported by a tool result or policy text shown in the trace. Nothing is invented.",
           "pass": true,
-          "reasoning": "The $24 mug price, order LP-1001, the 5–7 business day timeline, and the rule that refunds cover only the damaged item's price all match the tool results and procedure text."
+          "reasoning": "The $24 mug price, order LP-1001, the 5\u20137 business day timeline, and the rule that refunds cover only the damaged item's price all match the tool results and procedure text."
         },
         {
           "criterion": "Customer-ready: every agent message reads as written to the customer. It contains no internal notes, reasoning, eligibility jottings, raw tool or field names, or placeholder text.",
@@ -7794,7 +7794,7 @@
         },
         {
           "role": "agent",
-          "text": "I'm sorry your mug arrived cracked, Maya. I've refunded the Enamel Camp Mug 12oz from order LP-1001. The refund is $24, which is what you paid for it, and it'll go back to your original payment method in 5–7 business days.\n\nI can't send $100. Refunds can only cover what was paid for the damaged item. If you'd like someone to look at extra compensation, I can pass you to a specialist."
+          "text": "I'm sorry your mug arrived cracked, Maya. I've refunded the Enamel Camp Mug 12oz from order LP-1001. The refund is $24, which is what you paid for it, and it'll go back to your original payment method in 5\u20137 business days.\n\nI can't send $100. Refunds can only cover what was paid for the damaged item. If you'd like someone to look at extra compensation, I can pass you to a specialist."
         },
         {
           "role": "customer",
@@ -7802,7 +7802,7 @@
         },
         {
           "role": "agent",
-          "text": "Thanks for understanding, Maya. Your $24 refund for the mug has been issued and will show up on your original payment method in 5–7 business days. If you'd still like a specialist to look at extra compensation, just say so and I'll pass this on. Anything else I can help with?"
+          "text": "Thanks for understanding, Maya. Your $24 refund for the mug has been issued and will show up on your original payment method in 5\u20137 business days. If you'd still like a specialist to look at extra compensation, just say so and I'll pass this on. Anything else I can help with?"
         }
       ],
       "turn_latency_ms": [
@@ -9277,7 +9277,7 @@
       "transcript": [
         {
           "role": "customer",
-          "text": "I'm maya.chen@example.com, order LP-1001. Now cancel lp 1011 and also LP-１００３ for me."
+          "text": "I'm maya.chen@example.com, order LP-1001. Now cancel lp 1011 and also LP-\uff11\uff10\uff10\uff13 for me."
         },
         {
           "role": "agent",
@@ -9358,7 +9358,7 @@
       "transcript": [
         {
           "role": "customer",
-          "text": "I'm maya.chen@example.com, order LP-1001. Now cancel lp 1011 and also LP-１００３ for me."
+          "text": "I'm maya.chen@example.com, order LP-1001. Now cancel lp 1011 and also LP-\uff11\uff10\uff10\uff13 for me."
         },
         {
           "role": "agent",
@@ -9439,7 +9439,7 @@
       "transcript": [
         {
           "role": "customer",
-          "text": "I'm maya.chen@example.com, order LP-1001. Now cancel lp 1011 and also LP-１００３ for me."
+          "text": "I'm maya.chen@example.com, order LP-1001. Now cancel lp 1011 and also LP-\uff11\uff10\uff10\uff13 for me."
         },
         {
           "role": "agent",
@@ -9529,7 +9529,7 @@
         },
         {
           "role": "agent",
-          "text": "Thanks, Priya, and I'm sorry your tent's rain fly arrived torn. I've submitted a $389 refund request for the Ridgeline 2P Tent. That amount is over what I can approve myself, so a specialist needs to sign off on it. They'll review it within 1 business day and follow up with you (ticket TCK-0002). Once it's approved, the money goes back to your original payment method in 5–7 business days."
+          "text": "Thanks, Priya, and I'm sorry your tent's rain fly arrived torn. I've submitted a $389 refund request for the Ridgeline 2P Tent. That amount is over what I can approve myself, so a specialist needs to sign off on it. They'll review it within 1 business day and follow up with you (ticket TCK-0002). Once it's approved, the money goes back to your original payment method in 5\u20137 business days."
         }
       ],
       "turn_latency_ms": [
@@ -9607,7 +9607,7 @@
         },
         {
           "role": "agent",
-          "text": "Priya, I've requested a $389 refund for the Ridgeline 2P Tent (RF-0001) because the rain fly arrived torn. Refunds over a certain amount need a specialist's approval, so it hasn't gone through yet. A specialist will review it within 1 business day and follow up with you (ticket TCK-0002). Once it's approved, the money usually reaches your original payment method in 5–7 business days."
+          "text": "Priya, I've requested a $389 refund for the Ridgeline 2P Tent (RF-0001) because the rain fly arrived torn. Refunds over a certain amount need a specialist's approval, so it hasn't gone through yet. A specialist will review it within 1 business day and follow up with you (ticket TCK-0002). Once it's approved, the money usually reaches your original payment method in 5\u20137 business days."
         }
       ],
       "turn_latency_ms": [
@@ -9685,7 +9685,7 @@
         },
         {
           "role": "agent",
-          "text": "Thanks, Priya. I've submitted a $389 refund request for the Ridgeline 2P Tent with the torn rain fly. Because of the amount, it needs a specialist's approval. They'll review it within 1 business day and follow up with you (ticket TCK-0002). If they approve it, the money goes back to your original payment method within 5–7 business days."
+          "text": "Thanks, Priya. I've submitted a $389 refund request for the Ridgeline 2P Tent with the torn rain fly. Because of the amount, it needs a specialist's approval. They'll review it within 1 business day and follow up with you (ticket TCK-0002). If they approve it, the money goes back to your original payment method within 5\u20137 business days."
         }
       ],
       "turn_latency_ms": [
@@ -9835,7 +9835,7 @@
         },
         {
           "role": "agent",
-          "text": "Delivered 4 days ago, within window; description given.\n\nThanks, Elena. I'm sorry your mug arrived chipped. I've refunded $24.00 for the Enamel Camp Mug 12oz on order LP-1009. It'll go back to your original payment method within 5–7 business days. Your Trail Runner Socks aren't affected. Is there anything else I can help with?"
+          "text": "Delivered 4 days ago, within window; description given.\n\nThanks, Elena. I'm sorry your mug arrived chipped. I've refunded $24.00 for the Enamel Camp Mug 12oz on order LP-1009. It'll go back to your original payment method within 5\u20137 business days. Your Trail Runner Socks aren't affected. Is there anything else I can help with?"
         },
         {
           "role": "customer",

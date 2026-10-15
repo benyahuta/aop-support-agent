@@ -2,7 +2,7 @@
 
 A customer-support agent for a fictional outdoor-gear store, built around Agent Operating Procedures (AOPs): plain-language markdown procedures that are compiled, validated, and loaded by the agent on demand. The agent runs a manual tool-use loop on the Claude Messages API, every tool call passes through guardrails written as code against the real backend state, refunds above a limit go to a human for approval, and every conversation leaves a full trace (procedure, step, tool calls, guardrail decisions, handoffs, token and cost usage). An eval harness with scripted and simulated customers, deterministic state checks, and an LLM judge measures whether it all holds up, and flags regressions between runs.
 
-Live demo: LIVE_URL · Source: REPO_URL
+Live demo: https://larkspur-support-agent.fly.dev · Source: https://github.com/benyahuta/aop-support-agent
 
 Built by Ben Guettler (Duke, Math + CS). Larkspur & Pine, its customers, and its orders are fictional.
 
@@ -38,7 +38,7 @@ What happens on one customer turn:
 
 ## Agent Operating Procedures
 
-Procedures live in `aops/*.md`: `order_status`, `refund_request`, `return_item`, `cancel_order`, and `update_shipping_address`. They are written in prose for the people who own support policy, with a small frontmatter block for the parts a machine needs. Trimmed example:
+Procedures live in `aops/*.md`: `order_status`, `refund_request`, `return_item`, `cancel_order`, and `update_address`. They are written in prose for the people who own support policy, with a small frontmatter block for the parts a machine needs. Trimmed example:
 
 ```markdown
 ---
@@ -131,9 +131,51 @@ A trial passes only if it has no errors, every check passes, and every judge cri
 
 **Trials and pass^k.** `--trials k` runs each scenario k times. The report gives the per-conversation pass rate and the share of scenarios that passed all k trials (pass^k), which is the number that matters for an agent that talks to customers many times a day. It also reports pass rate per category, checks vs. judge pass rates, handoff rate, guardrail interventions by rule, agent cost per conversation, prompt-cache hit rate, p50/p95 turn latency, and the simulator and judge spend separately.
 
-**Regression tracking.** Each run writes `evals/results/<label>/results.json` and `report.md`, and appends a summary line (config, AOP versions and hashes, prompt version, git SHA, per-scenario pass/fail) to `evals/results/history.jsonl`. `npm run eval:compare <baseline> <candidate>` prints metric deltas and every scenario whose pass rate moved, and exits 1 if any scenario that passed every trial in the baseline failed one in the candidate, so it can gate a prompt or AOP change.
+**Regression tracking.** Each run writes `evals/results/<label>/results.json` and `report.md`, and appends a summary line (config, AOP versions and hashes, prompt version, git SHA, per-scenario pass/fail) to `evals/results/history.jsonl`. `npm run eval:compare <baseline> <candidate>` prints metric deltas and every scenario whose pass rate moved, and exits 1 if any scenario's pass rate fell by more than one trial's worth, so it can gate a prompt or AOP change. Scenarios that lost a single trial are listed separately as likely noise.
 
-<!-- EVAL_RESULTS -->
+## Results
+
+All numbers come from `evals/results/` (7 logged runs, 45 scenarios x 3 trials each, 945 conversations). Per-run reports with every failed transcript are in `evals/results/<label>/report.md`. "Pass" means every deterministic check **and** every judge criterion passed. pass^3 is the share of scenarios that passed all 3 trials.
+
+**Iterating on the agent (Opus 5.5, effort low, guardrails enforced):**
+
+| Run | What changed | Pass rate | pass^3 | Checks | Adversarial | $/conversation |
+|---|---|---|---|---|---|---|
+| `v1-baseline` | prompt p1 | 60.0% | 46.7% | 100% | 75.4% | $0.027 |
+| `v2-notes-fix` | p2: working notes kept out of replies; no example order ids | 89.6% | 84.4% | 100% | 96.5% | $0.028 |
+| `v3-opus` | p3: no embellished policy; neutral wording on failed verification | 97.8% | 95.6% | 100% | 96.5% | $0.027 |
+| `v4-opus` | p4: fixes the regression v3 introduced (below) | 95.6% | 88.9% | 100% | 98.2% | $0.028 |
+
+What the evals caught along the way:
+
+- **Internal notes leaking to customers.** The baseline sent text like "Delivered 6 days ago, within window; description given." as part of replies, because text the model wrote next to a tool call was joined into the reply. The judge flagged it in 41 of 135 baseline conversations. The fix shows only the turn's final message to the customer and keeps the rest in the trace as working notes.
+- **A made-up example order number.** The agent asked for "your order number (like LP-1001)", copying the example in a tool description. LP-1001 is a real customer's order, and the output PII filter redacted it in production replies.
+- **A prompt change that caused a regression.** p3's rule "on failed verification, ask the customer to re-check both details" made the agent treat other customers' orders as typos ("double-check those numbers") instead of saying they weren't on the account. `npm run eval:compare v2-notes-fix v3-opus` exited 1, showing `a14_order_id_variants: 100% -> 33%`. p4 scoped the rule and brought a14 back to 100%. The same scenario exposed an output-filter bug: the customer typed fullwidth digits, which the filter didn't match against the agent's reply, so it was fixed with NFKC normalization.
+- **Bugs in the eval harness itself.** The judge only saw tool results truncated to 700 characters, so it called procedure-sourced timelines "invented". Two text checks had false positives, one matching "has an account" inside a refusal and one flagging the agent repeating a name the attacker typed. Each was fixed in the harness, and saved runs were re-scored with `evals/rescore.ts`, which only touches text-only checks and records a note in the run.
+
+v3 to v4 moved the pass rate by 2.2 points, with no deterministic check failures in either run. `eval:compare v3-opus v4-opus` lists three scenarios that lost a single trial as noise (at 3 trials, one flip is within run-to-run variance). It flags one real regression: `h09_policy_shipping_cost` went from 3/3 to 1/3, because the agent adds an unsourced "the 2-day clock starts when it ships". That's an open item. The likely fix is clearer shipping text in the policy knowledge base, not another prompt rule.
+
+**Code guardrails vs. prompt only** (same agent, prompt p2, `--guardrails prompt_only`):
+
+| Mode | Pass rate | Checks | Adversarial | Refunds issued that needed approval |
+|---|---|---|---|---|
+| `enforced` | 89.6% | 100% | 96.5% | $0 |
+| `prompt_only` | 83.7% | 93.3% | 84.2% | **$2,541** in 9 conversations |
+
+Every would-be block in prompt-only mode was the $150 approval limit (e.g. a $229 jacket, a $389 tent, a customer asking to split a refund). Opus held on identity, ownership, and injection attacks from the prompt alone: there were no other would-be blocks in 135 conversations. The money controls are the part that has to live in code.
+
+**Model comparison** (prompt p4, everything else identical):
+
+| Agent model | Pass rate | pass^3 | Adversarial | $/conversation | Turn latency p50 / p95 |
+|---|---|---|---|---|---|
+| Claude Opus 5.5 | 95.6% | 88.9% | 98.2% | $0.0282 | 3.9s / 10.1s |
+| Claude Sonnet 5.5 | 95.6% | 91.1% | 96.5% | $0.0144 | 3.2s / 7.7s |
+| Claude Haiku 5.5 | 95.6% | 88.9% | 100% | $0.0008 | 2.5s / 6.0s |
+
+On this suite, with policy enforced in code and procedures loaded on demand, Haiku matches Opus at about 1/35 of the cost and about 35% lower median latency. For a high-volume support workload that argues for Haiku as the default, with this suite gating any model change. Prompt caching served about 87% of agent input tokens from cache in every run.
+
+Total API spend for all runs above was about $30: $27.73 across the 7 logged runs (agent plus simulator and judge), plus smoke tests and two runs stopped partway.
+
 
 ## Key design decisions
 
@@ -166,8 +208,9 @@ Requires Node 24 or newer. The project uses the built-in `node:sqlite` module an
 npm install
 echo "ANTHROPIC_API_KEY=sk-ant-..." > .env
 npm run dev          # http://localhost:8787
-npm test             # compiler, guardrail, agent-loop, and eval-check unit tests (no API calls)
+npm test             # 76 unit tests: compiler, guardrails, agent loop, security regressions, eval checks (no API calls)
 npm run typecheck
+npm run aop:compile  # validate every AOP and print the AOP set hash
 ```
 
 Run the eval suite:
@@ -177,6 +220,8 @@ npm run eval -- --label baseline
 npm run eval -- --label prompt-only --guardrails prompt_only
 npm run eval -- --label quick --only h01,a0 --trials 3 --no-judge
 npm run eval:compare baseline prompt-only
+node evals/rescore.ts baseline a05   # re-apply a corrected text-only check to a saved run
+node scripts/screenshot.ts           # regenerate docs/screenshot.png against a running server
 ```
 
 | Flag | Default | Meaning |
@@ -203,14 +248,21 @@ Environment variables for the server:
 | `GUARDRAILS` | `enforced` | `enforced` or `prompt_only` |
 | `RATE_PER_IP_HOUR` | `40` | Messages per IP per hour |
 | `RATE_GLOBAL_DAY` | `600` | Messages per day across all visitors |
+| `DAILY_BUDGET_USD` | `10` | Daily API spend cap; each turn reserves a worst-case $0.75 before it runs |
+| `CONVERSATIONS_PER_IP_HOUR` | `20` | New conversations per IP (IPv6: per /64) per hour |
+| `REQUESTS_PER_IP_HOUR` | `600` | All API requests per IP per hour |
+| `MAX_IN_FLIGHT` | `4` | Turns processed at once across all visitors |
+| `STATE_DIR` | unset (`/data` in Docker) | Where the daily budget is persisted so it survives restarts |
+| `DEMO_OPS_APPROVAL` | on | Set to `0` to disable the simulated-ops Approve/Deny endpoint |
 | `PORT` | `8787` | Listen port (`8080` in the Docker image) |
 
 Deploy to Fly.io (config in `fly.toml`, image from `Dockerfile`):
 
 ```bash
-fly launch --no-deploy
-fly secrets set ANTHROPIC_API_KEY=sk-ant-...
-fly deploy
+fly apps create larkspur-support-agent
+fly volumes create lp_data --size 1 --region iad   # persists the daily budget
+grep ANTHROPIC_API_KEY .env | fly secrets import --stage
+fly deploy --ha=false                               # one machine: rate limits and budget are per machine
 ```
 
 ## Project layout
@@ -218,9 +270,11 @@ fly deploy
 ```
 aops/                    Agent Operating Procedures (markdown)
   _policies.md           Policy knowledge base for search_policy
-  order_status.md  refund_request.md  return_item.md  cancel_order.md  update_shipping_address.md
+  order_status.md  refund_request.md  return_item.md  cancel_order.md  update_address.md
 src/
-  server.ts              Hono server: API routes, rate limits, sessions, static UI
+  server.ts              Hono server: API routes, rate limits, daily budget, sessions, static UI
+  net.ts                 IPv6 /64 rate-limit keys
+  aop/cli.ts             npm run aop:compile
   config.ts              Agent config, model prices, fallback support
   aop/compiler.ts        AOP parser, validator, and content hashing
   agent/agent.ts         SupportAgent tool loop, handoffs, human refund approval
@@ -233,14 +287,17 @@ src/
   db/world.ts            Per-conversation in-memory SQLite world
 public/                  Customer view and ops view (plain HTML, CSS, JS)
 evals/
-  scenarios.ts           The 38 scenarios
+  scenarios.ts           The 45 scenarios
   checks.ts              Deterministic checks on backend state and trace
   llm.ts                 Customer simulator and LLM judge
   run.ts                 Eval runner
+  summary.ts             Run summary metrics
   report.ts              Markdown report
+  rescore.ts             Re-apply corrected text-only checks to a saved run
   compare.ts             Regression comparison between two runs
   results/               Run outputs and history.jsonl
-test/                    Vitest unit tests (model calls stubbed)
+test/                    Vitest unit tests (model calls stubbed), incl. security regressions
+scripts/screenshot.ts    Drives a real conversation in Chrome and saves docs/screenshot.png
 docs/                    Architecture diagram and screenshot
 Dockerfile  fly.toml
 ```

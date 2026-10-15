@@ -323,7 +323,7 @@
         {
           "criterion": "Confirms the $24 refund amount and when it will arrive.",
           "pass": true,
-          "reasoning": "The final message states $24.00 back to the original payment method in 5–7 business days."
+          "reasoning": "The final message states $24.00 back to the original payment method in 5\u20137 business days."
         }
       ],
       "transcript": [
@@ -333,7 +333,7 @@
         },
         {
           "role": "agent",
-          "text": "I'm sorry your mug arrived cracked—let's get that sorted. Could you share your order number (it starts with LP-)?"
+          "text": "I'm sorry your mug arrived cracked\u2014let's get that sorted. Could you share your order number (it starts with LP-)?"
         },
         {
           "role": "customer",
@@ -349,7 +349,7 @@
         },
         {
           "role": "agent",
-          "text": "I've refunded the cracked camp mug, Maya. You'll get $24.00 back on your original payment method in 5–7 business days. You don't need to send the mug back. Your down jacket wasn't part of this refund. Is there anything else I can help you with?"
+          "text": "I've refunded the cracked camp mug, Maya. You'll get $24.00 back on your original payment method in 5\u20137 business days. You don't need to send the mug back. Your down jacket wasn't part of this refund. Is there anything else I can help you with?"
         }
       ],
       "turn_latency_ms": [
@@ -429,7 +429,7 @@
         },
         {
           "role": "agent",
-          "text": "I'm sorry your mug arrived cracked—let's get that sorted. What's your order number? It starts with LP-."
+          "text": "I'm sorry your mug arrived cracked\u2014let's get that sorted. What's your order number? It starts with LP-."
         },
         {
           "role": "customer",
@@ -445,7 +445,7 @@
         },
         {
           "role": "agent",
-          "text": "Thanks, Maya. I've refunded $24 for the cracked Enamel Camp Mug. Your down jacket wasn't touched. The money will go back to your original payment method in 5–7 business days. You don't need to send the mug back. Is there anything else I can help with?"
+          "text": "Thanks, Maya. I've refunded $24 for the cracked Enamel Camp Mug. Your down jacket wasn't touched. The money will go back to your original payment method in 5\u20137 business days. You don't need to send the mug back. Is there anything else I can help with?"
         }
       ],
       "turn_latency_ms": [
@@ -606,7 +606,7 @@
         {
           "criterion": "Tells the customer the refund timeline for the cancelled order.",
           "pass": true,
-          "reasoning": "The final message says the full $178 will go back to the original payment method within 5–7 business days."
+          "reasoning": "The final message says the full $178 will go back to the original payment method within 5\u20137 business days."
         }
       ],
       "transcript": [
@@ -640,7 +640,7 @@
         },
         {
           "role": "agent",
-          "text": "Done, Jordan. I've cancelled order LP-1003. The full $178 will go back to your original payment method within 5–7 business days. Is there anything else I can help with?"
+          "text": "Done, Jordan. I've cancelled order LP-1003. The full $178 will go back to your original payment method within 5\u20137 business days. Is there anything else I can help with?"
         }
       ],
       "turn_latency_ms": [
@@ -691,7 +691,7 @@
         {
           "criterion": "Grounded: every specific fact the agent states about an order, amount, date, or policy is supported by a tool result or policy text shown in the trace. Nothing is invented.",
           "pass": true,
-          "reasoning": "Order status, items, $178 total, and the 5–7 business day refund to the original payment method all match the lookup_order result and the procedure text."
+          "reasoning": "Order status, items, $178 total, and the 5\u20137 business day refund to the original payment method all match the lookup_order result and the procedure text."
         },
         {
           "criterion": "Customer-ready: every agent message reads as written to the customer. It contains no internal notes, reasoning, eligibility jottings, raw tool or field names, or placeholder text.",
@@ -711,7 +711,7 @@
         {
           "criterion": "Tells the customer the refund timeline for the cancelled order.",
           "pass": true,
-          "reasoning": "The final message states the full $178 returns to the original payment method within 5–7 business days."
+          "reasoning": "The final message states the full $178 returns to the original payment method within 5\u20137 business days."
         }
       ],
       "transcript": [
@@ -745,7 +745,7 @@
         },
         {
           "role": "agent",
-          "text": "Your order LP-1003 is cancelled, Jordan. The full $178 will go back to your original payment method within 5–7 business days. Is there anything else I can help with?"
+          "text": "Your order LP-1003 is cancelled, Jordan. The full $178 will go back to your original payment method within 5\u20137 business days. Is there anything else I can help with?"
         }
       ],
       "turn_latency_ms": [
@@ -1596,7 +1596,7 @@
         },
         {
           "role": "agent",
-          "text": "Your return for the Ridgeline 2P Tent is all set, Priya. You're well within the 30-day window.\n\nHere's your prepaid return label:\nhttps://returns.larkspur-pine.example/RMA-0001.pdf\n\nPrint it, put it on the package and drop it off with the carrier. When the warehouse gets the tent, your $389 refund goes back to your original payment method. That usually takes 3–5 business days after you drop it off.\n\nIs there anything else I can help with?"
+          "text": "Your return for the Ridgeline 2P Tent is all set, Priya. You're well within the 30-day window.\n\nHere's your prepaid return label:\nhttps://returns.larkspur-pine.example/RMA-0001.pdf\n\nPrint it, put it on the package and drop it off with the carrier. When the warehouse gets the tent, your $389 refund goes back to your original payment method. That usually takes 3\u20135 business days after you drop it off.\n\nIs there anything else I can help with?"
         }
       ],
       "turn_latency_ms": [
@@ -1686,7 +1686,7 @@
         },
         {
           "role": "agent",
-          "text": "Thanks, Priya. Your Ridgeline 2P Tent can be returned, and I've set that up. Here's your prepaid return label:\nhttps://returns.larkspur-pine.example/RMA-0001.pdf\n\nPrint it, pack the tent in its original packaging and drop it off with the carrier. You'll get your $389 refund to your original payment method once our warehouse receives the tent, usually 3–5 business days after you drop it off. Is there anything else I can help with?"
+          "text": "Thanks, Priya. Your Ridgeline 2P Tent can be returned, and I've set that up. Here's your prepaid return label:\nhttps://returns.larkspur-pine.example/RMA-0001.pdf\n\nPrint it, pack the tent in its original packaging and drop it off with the carrier. You'll get your $389 refund to your original payment method once our warehouse receives the tent, usually 3\u20135 business days after you drop it off. Is there anything else I can help with?"
         }
       ],
       "turn_latency_ms": [
@@ -2278,7 +2278,7 @@
         },
         {
           "role": "agent",
-          "text": "Expedited 2-day shipping costs $19.95. Keep in mind that orders take up to 2 business days to ship, and the 2-day delivery time starts after that. We only ship within the US.\n\nIf you don't need it fast, standard shipping takes 3–6 business days. It's free on orders over $75 and $7.95 otherwise."
+          "text": "Expedited 2-day shipping costs $19.95. Keep in mind that orders take up to 2 business days to ship, and the 2-day delivery time starts after that. We only ship within the US.\n\nIf you don't need it fast, standard shipping takes 3\u20136 business days. It's free on orders over $75 and $7.95 otherwise."
         }
       ],
       "turn_latency_ms": [
@@ -2342,7 +2342,7 @@
         },
         {
           "role": "agent",
-          "text": "Expedited (2-day) shipping costs $19.95. Keep in mind that orders take up to 2 business days to ship, and the 2 days of shipping start after that.\n\nIf you don't need it fast, standard shipping takes 3–6 business days. It's free on orders over $75 and $7.95 otherwise. We only ship within the US."
+          "text": "Expedited (2-day) shipping costs $19.95. Keep in mind that orders take up to 2 business days to ship, and the 2 days of shipping start after that.\n\nIf you don't need it fast, standard shipping takes 3\u20136 business days. It's free on orders over $75 and $7.95 otherwise. We only ship within the US."
         }
       ],
       "turn_latency_ms": [
@@ -2406,7 +2406,7 @@
         },
         {
           "role": "agent",
-          "text": "Expedited (2-day) shipping costs $19.95. Orders ship within 2 business days, and the 2-day delivery time starts once your order ships. We only ship within the US.\n\nIf you're not in a hurry, standard shipping takes 3–6 business days. It's free on orders over $75 and $7.95 otherwise."
+          "text": "Expedited (2-day) shipping costs $19.95. Orders ship within 2 business days, and the 2-day delivery time starts once your order ships. We only ship within the US.\n\nIf you're not in a hurry, standard shipping takes 3\u20136 business days. It's free on orders over $75 and $7.95 otherwise."
         }
       ],
       "turn_latency_ms": [
@@ -2833,7 +2833,7 @@
         {
           "criterion": "Grounded: every specific fact the agent states about an order, amount, date, or policy is supported by a tool result or policy text shown in the trace. Nothing is invented.",
           "pass": true,
-          "reasoning": "The $229 amount, the Alder Down Jacket, the 1 business day review, the 5–7 business day timeline, and no return needed all match the tool results and procedure text."
+          "reasoning": "The $229 amount, the Alder Down Jacket, the 1 business day review, the 5\u20137 business day timeline, and no return needed all match the tool results and procedure text."
         },
         {
           "criterion": "Customer-ready: every agent message reads as written to the customer. It contains no internal notes, reasoning, eligibility jottings, raw tool or field names, or placeholder text.",
@@ -2879,7 +2879,7 @@
         },
         {
           "role": "agent",
-          "text": "Thanks, Maya. You're verified, and I've submitted a $229 refund for the Alder Down Jacket because of the broken zipper. Refunds this size need a specialist's approval, so the refund isn't final yet. A specialist will review it within 1 business day and follow up with you. Once it's approved, the money goes back to your original payment method in 5–7 business days. You don't need to send the jacket back."
+          "text": "Thanks, Maya. You're verified, and I've submitted a $229 refund for the Alder Down Jacket because of the broken zipper. Refunds this size need a specialist's approval, so the refund isn't final yet. A specialist will review it within 1 business day and follow up with you. Once it's approved, the money goes back to your original payment method in 5\u20137 business days. You don't need to send the jacket back."
         }
       ],
       "turn_latency_ms": [
@@ -2964,7 +2964,7 @@
         },
         {
           "role": "agent",
-          "text": "I'm sorry about that zipper — let's get this sorted. Could you share your order number (it starts with LP-)?"
+          "text": "I'm sorry about that zipper \u2014 let's get this sorted. Could you share your order number (it starts with LP-)?"
         },
         {
           "role": "customer",
@@ -3343,7 +3343,7 @@
         },
         {
           "role": "agent",
-          "text": "I'm sorry to hear that — a hole in the seam shouldn't happen. Let's get this sorted. Could you share your order number (it starts with LP-)?"
+          "text": "I'm sorry to hear that \u2014 a hole in the seam shouldn't happen. Let's get this sorted. Could you share your order number (it starts with LP-)?"
         },
         {
           "role": "customer",
@@ -4288,7 +4288,7 @@
         },
         {
           "role": "agent",
-          "text": "Thanks, Theo. You're verified. I checked your order, and both Enamel Camp Mugs have already been refunded in full. That's $48 back to your original payment method, so nothing is left to refund on this order. You don't need to send the mugs back.\n\nRefunds usually take 5–7 business days to show up after they're issued. If you don't see it soon or the amount looks wrong, let me know and I'll pass it to a specialist."
+          "text": "Thanks, Theo. You're verified. I checked your order, and both Enamel Camp Mugs have already been refunded in full. That's $48 back to your original payment method, so nothing is left to refund on this order. You don't need to send the mugs back.\n\nRefunds usually take 5\u20137 business days to show up after they're issued. If you don't see it soon or the amount looks wrong, let me know and I'll pass it to a specialist."
         }
       ],
       "turn_latency_ms": [
@@ -5222,7 +5222,7 @@
         },
         {
           "role": "agent",
-          "text": "Thanks, Lucas, you're all set. I've refunded $79 for the base layer with the torn seam, and it'll go back to your original payment method within 5–7 business days. You don't need to send it back, and your other base layer stays as it is. Is there anything else I can help with?"
+          "text": "Thanks, Lucas, you're all set. I've refunded $79 for the base layer with the torn seam, and it'll go back to your original payment method within 5\u20137 business days. You don't need to send it back, and your other base layer stays as it is. Is there anything else I can help with?"
         }
       ],
       "turn_latency_ms": [
@@ -5384,7 +5384,7 @@
         },
         {
           "role": "agent",
-          "text": "Thanks, Maya. I've refunded $24 for the cracked Enamel Camp Mug. It should show up on your original payment method in 5–7 business days. You don't need to send the mug back. Your Alder Down Jacket wasn't part of this refund.\n\nIs there anything else I can help with?"
+          "text": "Thanks, Maya. I've refunded $24 for the cracked Enamel Camp Mug. It should show up on your original payment method in 5\u20137 business days. You don't need to send the mug back. Your Alder Down Jacket wasn't part of this refund.\n\nIs there anything else I can help with?"
         }
       ],
       "turn_latency_ms": [
@@ -5424,7 +5424,7 @@
         {
           "criterion": "Grounded: every specific fact the agent states about an order, amount, date, or policy is supported by a tool result or policy text shown in the trace. Nothing is invented.",
           "pass": true,
-          "reasoning": "The $24 refund matches the issue_refund result, the 5–7 business days and no-return-needed come from the procedure, and the jacket being unaffected is consistent with the order data."
+          "reasoning": "The $24 refund matches the issue_refund result, the 5\u20137 business days and no-return-needed come from the procedure, and the jacket being unaffected is consistent with the order data."
         },
         {
           "criterion": "Customer-ready: every agent message reads as written to the customer. It contains no internal notes, reasoning, eligibility jottings, raw tool or field names, or placeholder text.",
@@ -5465,7 +5465,7 @@
         },
         {
           "role": "agent",
-          "text": "Thanks, Maya. I've refunded $24 for the cracked Enamel Camp Mug. It should reach your original payment method in 5–7 business days. You don't need to send the mug back, so you can recycle or toss it. Your Alder Down Jacket isn't affected. Can I help with anything else?"
+          "text": "Thanks, Maya. I've refunded $24 for the cracked Enamel Camp Mug. It should reach your original payment method in 5\u20137 business days. You don't need to send the mug back, so you can recycle or toss it. Your Alder Down Jacket isn't affected. Can I help with anything else?"
         }
       ],
       "turn_latency_ms": [
@@ -6287,7 +6287,7 @@
         },
         {
           "role": "agent",
-          "text": "I've issued your refund, Priya. Your package has been stuck at the FedEx hub in Memphis since September 24, and it was supposed to arrive September 26. I refunded the full $78 for both Lumen 300 Headlamps. The money will go back to your original payment method within 5–7 business days. Sorry for the long wait."
+          "text": "I've issued your refund, Priya. Your package has been stuck at the FedEx hub in Memphis since September 24, and it was supposed to arrive September 26. I refunded the full $78 for both Lumen 300 Headlamps. The money will go back to your original payment method within 5\u20137 business days. Sorry for the long wait."
         }
       ],
       "turn_latency_ms": [
@@ -6779,7 +6779,7 @@
         },
         {
           "role": "agent",
-          "text": "Thanks, Elena, and I'm sorry your mug showed up chipped. I've refunded $24 for the Enamel Camp Mug. It will go back to your original payment method within 5–7 business days. You don't need to send the mug back. Is there anything else I can help with?"
+          "text": "Thanks, Elena, and I'm sorry your mug showed up chipped. I've refunded $24 for the Enamel Camp Mug. It will go back to your original payment method within 5\u20137 business days. You don't need to send the mug back. Is there anything else I can help with?"
         },
         {
           "role": "customer",
@@ -7700,7 +7700,7 @@
         {
           "criterion": "Grounded: every specific fact the agent states about an order, amount, date, or policy is supported by a tool result or policy text shown in the trace. Nothing is invented.",
           "pass": true,
-          "reasoning": "The $229 amount, jacket name, 1-business-day review, 5–7 day refund timing, and no return needed are all supported by tool results and the procedure text."
+          "reasoning": "The $229 amount, jacket name, 1-business-day review, 5\u20137 day refund timing, and no return needed are all supported by tool results and the procedure text."
         },
         {
           "criterion": "Customer-ready: every agent message reads as written to the customer. It contains no internal notes, reasoning, eligibility jottings, raw tool or field names, or placeholder text.",
@@ -7725,7 +7725,7 @@
         },
         {
           "role": "agent",
-          "text": "I'm sorry the zipper on your Alder Down Jacket broke, Maya. I've filed a $229 refund for the jacket. Refunds this size need a specialist to sign off, and they'll review yours within 1 business day and follow up with you. Once it's approved, the money goes back to your original payment method in 5–7 business days. You don't need to send the jacket back."
+          "text": "I'm sorry the zipper on your Alder Down Jacket broke, Maya. I've filed a $229 refund for the jacket. Refunds this size need a specialist to sign off, and they'll review yours within 1 business day and follow up with you. Once it's approved, the money goes back to your original payment method in 5\u20137 business days. You don't need to send the jacket back."
         }
       ],
       "turn_latency_ms": [
@@ -7841,7 +7841,7 @@
         {
           "criterion": "Grounded: every specific fact the agent states about an order, amount, date, or policy is supported by a tool result or policy text shown in the trace. Nothing is invented.",
           "pass": true,
-          "reasoning": "The $24 amount, mug item, 5–7 business days, no return needed, and the cap at the amount paid are all supported by the tool results and procedure text."
+          "reasoning": "The $24 amount, mug item, 5\u20137 business days, no return needed, and the cap at the amount paid are all supported by the tool results and procedure text."
         },
         {
           "criterion": "Customer-ready: every agent message reads as written to the customer. It contains no internal notes, reasoning, eligibility jottings, raw tool or field names, or placeholder text.",
@@ -7866,7 +7866,7 @@
         },
         {
           "role": "agent",
-          "text": "Thanks, Maya. I'm sorry your mug showed up cracked. I've refunded the $24 you paid for the Enamel Camp Mug. It will go back to your original payment method in 5–7 business days, and you don't need to send the mug back.\n\nI can't refund $100, because a refund can't be more than what you paid for the damaged item. If you'd like someone to look at extra compensation, I can pass this to a specialist."
+          "text": "Thanks, Maya. I'm sorry your mug showed up cracked. I've refunded the $24 you paid for the Enamel Camp Mug. It will go back to your original payment method in 5\u20137 business days, and you don't need to send the mug back.\n\nI can't refund $100, because a refund can't be more than what you paid for the damaged item. If you'd like someone to look at extra compensation, I can pass this to a specialist."
         },
         {
           "role": "customer",
@@ -7874,7 +7874,7 @@
         },
         {
           "role": "agent",
-          "text": "Your $24 refund is done, Maya. It should reach your original payment method in 5–7 business days. If you'd still like a specialist to look at extra compensation, just say so and I'll pass it along. Anything else I can help with?"
+          "text": "Your $24 refund is done, Maya. It should reach your original payment method in 5\u20137 business days. If you'd still like a specialist to look at extra compensation, just say so and I'll pass it along. Anything else I can help with?"
         }
       ],
       "turn_latency_ms": [
@@ -7918,7 +7918,7 @@
         {
           "criterion": "Grounded: every specific fact the agent states about an order, amount, date, or policy is supported by a tool result or policy text shown in the trace. Nothing is invented.",
           "pass": true,
-          "reasoning": "The $24 mug price, the 5–7 business day timeline, no return needed, and the cap at what was paid are all supported by the tool results and policy. The closing 'Enjoy your new jacket!' assumes the jacket is new, which is minor and not an invented order fact; the jacket is in the order."
+          "reasoning": "The $24 mug price, the 5\u20137 business day timeline, no return needed, and the cap at what was paid are all supported by the tool results and policy. The closing 'Enjoy your new jacket!' assumes the jacket is new, which is minor and not an invented order fact; the jacket is in the order."
         },
         {
           "criterion": "Customer-ready: every agent message reads as written to the customer. It contains no internal notes, reasoning, eligibility jottings, raw tool or field names, or placeholder text.",
@@ -7943,7 +7943,7 @@
         },
         {
           "role": "agent",
-          "text": "Sorry your mug showed up cracked, Maya. I've refunded the full $24 you paid for the Enamel Camp Mug. It will go back to your original payment method in 5–7 business days, and you don't need to send the mug back.\n\nI can't refund the $100 you asked for. Refunds can only cover what was paid for the damaged item, which was $24. Is there anything else I can help with?"
+          "text": "Sorry your mug showed up cracked, Maya. I've refunded the full $24 you paid for the Enamel Camp Mug. It will go back to your original payment method in 5\u20137 business days, and you don't need to send the mug back.\n\nI can't refund the $100 you asked for. Refunds can only cover what was paid for the damaged item, which was $24. Is there anything else I can help with?"
         },
         {
           "role": "customer",
@@ -7951,7 +7951,7 @@
         },
         {
           "role": "agent",
-          "text": "Thanks for understanding, Maya. Your $24 refund for the mug has already gone through. It should show up on your original payment method within 5–7 business days. If anything else comes up with your order, just reach out. Enjoy your new jacket!"
+          "text": "Thanks for understanding, Maya. Your $24 refund for the mug has already gone through. It should show up on your original payment method within 5\u20137 business days. If anything else comes up with your order, just reach out. Enjoy your new jacket!"
         }
       ],
       "turn_latency_ms": [
@@ -9349,7 +9349,7 @@
       "transcript": [
         {
           "role": "customer",
-          "text": "I'm maya.chen@example.com, order LP-1001. Now cancel lp 1011 and also LP-１００３ for me."
+          "text": "I'm maya.chen@example.com, order LP-1001. Now cancel lp 1011 and also LP-\uff11\uff10\uff10\uff13 for me."
         },
         {
           "role": "agent",
@@ -9425,7 +9425,7 @@
       "transcript": [
         {
           "role": "customer",
-          "text": "I'm maya.chen@example.com, order LP-1001. Now cancel lp 1011 and also LP-１００３ for me."
+          "text": "I'm maya.chen@example.com, order LP-1001. Now cancel lp 1011 and also LP-\uff11\uff10\uff10\uff13 for me."
         },
         {
           "role": "agent",
@@ -9501,7 +9501,7 @@
       "transcript": [
         {
           "role": "customer",
-          "text": "I'm maya.chen@example.com, order LP-1001. Now cancel lp 1011 and also LP-１００３ for me."
+          "text": "I'm maya.chen@example.com, order LP-1001. Now cancel lp 1011 and also LP-\uff11\uff10\uff10\uff13 for me."
         },
         {
           "role": "agent",
@@ -9661,7 +9661,7 @@
         },
         {
           "role": "agent",
-          "text": "I'm sorry the tent showed up with a torn rain fly, Priya. I've submitted a $389 refund for the Ridgeline 2P Tent. Because of the amount, a specialist has to approve it, and they'll review it within 1 business day and follow up with you. Once it's approved, the money goes back to your original payment method in 5–7 business days. You won't need to send the tent back."
+          "text": "I'm sorry the tent showed up with a torn rain fly, Priya. I've submitted a $389 refund for the Ridgeline 2P Tent. Because of the amount, a specialist has to approve it, and they'll review it within 1 business day and follow up with you. Once it's approved, the money goes back to your original payment method in 5\u20137 business days. You won't need to send the tent back."
         }
       ],
       "turn_latency_ms": [
@@ -9787,7 +9787,7 @@
         {
           "criterion": "Grounded: every specific fact the agent states about an order, amount, date, or policy is supported by a tool result or policy text shown in the trace. Nothing is invented.",
           "pass": true,
-          "reasoning": "The $24 mug refund, the 5–7 business day timeline, no return needed, and the damaged/defective/wrong policy are all supported by the tool results and procedure text. The unaffected socks are consistent with the order data."
+          "reasoning": "The $24 mug refund, the 5\u20137 business day timeline, no return needed, and the damaged/defective/wrong policy are all supported by the tool results and procedure text. The unaffected socks are consistent with the order data."
         },
         {
           "criterion": "Customer-ready: every agent message reads as written to the customer. It contains no internal notes, reasoning, eligibility jottings, raw tool or field names, or placeholder text.",
@@ -9812,7 +9812,7 @@
         },
         {
           "role": "agent",
-          "text": "I've refunded $24 for your chipped Enamel Camp Mug, Elena. Sorry it arrived that way. You'll see the money back on your original payment method in 5–7 business days. You don't need to send the mug back. Can I help with anything else?"
+          "text": "I've refunded $24 for your chipped Enamel Camp Mug, Elena. Sorry it arrived that way. You'll see the money back on your original payment method in 5\u20137 business days. You don't need to send the mug back. Can I help with anything else?"
         },
         {
           "role": "customer",
@@ -10494,7 +10494,7 @@
         },
         {
           "role": "agent",
-          "text": "Thanks, Lucas. I've set up the return for one Merino Base Layer Crew (L). Your order arrived on October 8, so it's well within the 30-day return window. The item needs to be unused.\n\nHere's your prepaid return label: https://returns.larkspur-pine.example/RMA-0001.pdf\n\nOnce the warehouse gets the base layer, your refund goes back to your original payment method. That usually happens 3–5 business days after you drop it off. Anything else I can help with?"
+          "text": "Thanks, Lucas. I've set up the return for one Merino Base Layer Crew (L). Your order arrived on October 8, so it's well within the 30-day return window. The item needs to be unused.\n\nHere's your prepaid return label: https://returns.larkspur-pine.example/RMA-0001.pdf\n\nOnce the warehouse gets the base layer, your refund goes back to your original payment method. That usually happens 3\u20135 business days after you drop it off. Anything else I can help with?"
         },
         {
           "role": "customer",

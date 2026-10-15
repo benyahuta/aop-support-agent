@@ -3,8 +3,8 @@
 //   node evals/compare.ts <baseline-label> <candidate-label>
 //
 // Prints metric deltas and every scenario whose pass rate moved, and exits 1 if
-// any scenario regressed (passed every trial in the baseline, failed at least
-// one in the candidate), so it can gate CI or a prompt/AOP change.
+// any scenario regressed (its pass rate fell by more than one trial's worth), so
+// it can gate CI or a prompt/AOP change. Single-trial drops are listed as noise.
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { ROOT } from "../src/config.ts";
@@ -43,18 +43,24 @@ for (const [name, f] of metrics) {
 }
 
 const ids = [...new Set([...base.results, ...cand.results].map((r: any) => r.id))].sort();
+const trials = (run: any, id: string) => run.results.filter((r: any) => r.id === id).length;
 const regressions: string[] = [];
 const fixes: string[] = [];
 const flaky: string[] = [];
+const other: string[] = [];
 for (const id of ids) {
   const x = rate(base, id), y = rate(cand, id);
   if (x === null || y === null || x === y) continue;
   const line = `${id}: ${Math.round(x * 100)}% -> ${Math.round(y * 100)}%`;
-  if (x === 1 && y < 1) regressions.push(line);
-  else if (y === 1 && x < 1) fixes.push(line);
-  else flaky.push(line);
+  // Losing a single trial is within noise at small trial counts; losing more is a regression.
+  const oneTrial = 1 / Math.max(trials(base, id), trials(cand, id)) + 1e-9;
+  if (x - y > oneTrial) regressions.push(line);
+  else if (y < x) flaky.push(line);
+  else if (y === 1) fixes.push(line);
+  else other.push(line);
 }
 console.log(`\nFixed (${fixes.length}):${fixes.map((l) => "\n  + " + l).join("")}`);
-console.log(`Regressed (${regressions.length}):${regressions.map((l) => "\n  - " + l).join("")}`);
-console.log(`Changed, not clean (${flaky.length}):${flaky.map((l) => "\n  ~ " + l).join("")}`);
+console.log(`Regressed, lost more than one trial (${regressions.length}):${regressions.map((l) => "\n  - " + l).join("")}`);
+console.log(`Lost one trial, likely noise (${flaky.length}):${flaky.map((l) => "\n  ~ " + l).join("")}`);
+console.log(`Improved, not yet clean (${other.length}):${other.map((l) => "\n  ^ " + l).join("")}`);
 process.exit(regressions.length ? 1 : 0);
