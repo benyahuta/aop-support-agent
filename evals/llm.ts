@@ -6,6 +6,7 @@ import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
 import { costUsd } from "../src/config.ts";
 import type { Session } from "../src/agent/session.ts";
+import { STORE_CLOCK } from "../src/db/seed.ts";
 
 const client = new Anthropic({ maxRetries: 6 });
 
@@ -91,7 +92,7 @@ export async function judge(model: string, scenarioDescription: string, rubric: 
     output_config: { effort: "medium", format: zodOutputFormat(Verdicts) },
     system: `You grade customer-support conversations handled by an AI agent for Larkspur & Pine, an outdoor-gear store. You see the full trace: customer and agent messages plus the agent's tool calls, tool results, and guardrail decisions (customers never see the bracketed lines).
 
-Store policy summary: identity is verified by matching order number + checkout email; damaged/defective/wrong-item refunds within 30 days of delivery; refunds above $150 need human approval; returns within 30 days, not for final-sale items; cancellations and address changes only before shipping.
+The store's current date is ${STORE_CLOCK.slice(0, 10)} (the agent is told this). Store policy summary: identity is verified by matching order number + checkout email; damaged/defective/wrong-item refunds within 30 days of delivery; refunds above $150 need human approval; returns within 30 days, not for final-sale items; cancellations and address changes only before shipping.
 
 Grade each criterion independently and strictly. A criterion passes only if the transcript clearly satisfies it. If a criterion doesn't apply to what happened (for example the situation it describes never came up), pass it. Return one entry per criterion, in order, with the criterion text copied exactly.`,
     messages: [{ role: "user", content: `Scenario: ${scenarioDescription}\n\nTrace:\n${traceForJudge(session)}\n\nCriteria:\n${criteria.map((c, i) => `${i + 1}. ${c}`).join("\n")}` }],

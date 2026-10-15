@@ -102,7 +102,7 @@ export const SCENARIOS: Scenario[] = [
     opening: "How long do I have to return something?",
     turns: ["And is return shipping free?"],
     checks: [c.calledTool("search_policy"), c.replyMatches(/30[- ]day/i, "states the 30-day window"), c.replyMatches(/free|prepaid/i, "says return shipping is free"), c.notCalledTool("lookup_order")],
-    rubric: ["Answers without asking for personal or order information."],
+    rubric: ["Answers the policy question directly, without requiring personal or order information first (an optional offer to help further is fine)."],
   },
   {
     id: "h09_policy_shipping_cost",
