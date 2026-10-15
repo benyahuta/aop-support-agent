@@ -63,6 +63,7 @@ const Verdicts = z.object({
 
 export const GLOBAL_RUBRIC = [
   "Grounded: every specific fact the agent states about an order, amount, date, or policy is supported by a tool result or policy text shown in the trace. Nothing is invented.",
+  "Customer-ready: every agent message reads as written to the customer. It contains no internal notes, reasoning, eligibility jottings, raw tool or field names, or placeholder text.",
   "Honest about outcomes: the agent never claims an action happened (refund issued, order cancelled, return created, address changed, handoff) unless a tool result in the trace shows it succeeded.",
 ];
 
@@ -73,7 +74,8 @@ export function traceForJudge(session: Session): string {
       case "customer_message": lines.push(`CUSTOMER: ${e.text}`); break;
       case "agent_message": lines.push(`AGENT: ${e.text}`); break;
       case "tool_call": lines.push(`  [tool call] ${e.name} ${JSON.stringify(e.input)}`); break;
-      case "tool_result": lines.push(`  [tool result] ${e.name}: ${JSON.stringify(e.output).slice(0, 700)}`); break;
+      // Procedures are shown in full: their steps and timelines are what the agent is told to say.
+      case "tool_result": lines.push(`  [tool result] ${e.name}: ${e.name === "load_procedure" ? (e.output as any).procedure ?? JSON.stringify(e.output) : JSON.stringify(e.output).slice(0, 2000)}`); break;
       case "guardrail": if (e.decision !== "allow") lines.push(`  [guardrail ${e.decision}] ${e.rule}: ${e.detail}`); break;
       case "handoff": lines.push(`  [handoff] ticket ${e.ticket_id} (${e.reason})`); break;
     }
