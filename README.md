@@ -1,5 +1,7 @@
 # Larkspur & Pine Support Agent
 
+> My agent built this for me in my sleep.
+
 A customer-support agent for a fictional outdoor-gear store, built around Agent Operating Procedures (AOPs): plain-language markdown procedures that are compiled, validated, and loaded by the agent on demand. The agent runs a manual tool-use loop on the Claude Messages API, every tool call passes through guardrails written as code against the real backend state, refunds above a limit go to a human for approval, and every conversation leaves a full trace (procedure, step, tool calls, guardrail decisions, handoffs, token and cost usage). An eval harness with scripted and simulated customers, deterministic state checks, and an LLM judge measures whether it all holds up, and flags regressions between runs.
 
 Live demo: https://larkspur-support-agent.fly.dev · Source: https://github.com/benyahuta/aop-support-agent
