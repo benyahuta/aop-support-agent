@@ -117,7 +117,7 @@ export class SupportAgent {
       // writes alongside tool calls is working notes: kept in the trace for ops.
       const text = msg.content.filter((b) => b.type === "text").map((b) => (b as Anthropic.Beta.BetaTextBlock).text.trim()).filter(Boolean).join("\n\n");
       const hasTools = msg.content.some((b) => b.type === "tool_use");
-      if (text && hasTools && msg.stop_reason !== "max_tokens") record(session, { type: "agent_note", text });
+      if (text && hasTools && msg.stop_reason !== "max_tokens") record(session, { type: "agent_note", text: extractStepTag(text).text || text });
       else if (text) replyParts.push(text);
 
       if (msg.stop_reason === "refusal") {
@@ -137,7 +137,11 @@ export class SupportAgent {
       session.messages.push({ role: "user", content: results });
     }
 
-    this.advanceToClose(session, start);
+    // Step attribution for steps with no tool (asking, confirming, closing):
+    // the agent tags its customer message with <step N>, which is stripped here.
+    const tagged = extractStepTag(replyParts.join("\n\n"));
+    replyParts.splice(0, replyParts.length, ...(tagged.text ? [tagged.text] : []));
+    if (tagged.step !== null) this.markStep(session, tagged.step);
 
     // If the model put its only customer-facing words alongside a tool call, fall back to them.
     const lastNote = [...session.trace.slice(start)].reverse().find((e) => e.type === "agent_note") as { text: string } | undefined;
@@ -151,21 +155,12 @@ export class SupportAgent {
     return { reply, events: session.trace.slice(start), status: session.status };
   }
 
-  /**
-   * The closing step of a procedure has no tool call, so nothing would mark it
-   * current. If this turn completed the action in the step right before a
-   * tool-less final step, move the step tracker to that final step.
-   */
-  private advanceToClose(session: Session, start: number) {
-    if (!session.activeAop || session.currentStep === null) return;
-    const aop = this.aops.get(session.activeAop);
-    const last = aop?.steps.at(-1);
-    if (!aop || !last || last.tools.length > 0 || session.currentStep !== last.n - 1) return;
-    const events = session.trace.slice(start);
-    const completed = events.some((e) => e.type === "tool_result" && e.ok && MUTATING.has(e.name) && (e.output as any)?.status !== "pending_approval");
-    if (!completed) return;
-    session.currentStep = last.n;
-    record(session, { type: "step", aop_id: aop.id, step: last.n, title: last.title });
+  private markStep(session: Session, step: number) {
+    const aop = session.activeAop ? this.aops.get(session.activeAop) : undefined;
+    const s = aop?.steps.find((x) => x.n === step);
+    if (!aop || !s || step === session.currentStep) return;
+    session.currentStep = step;
+    record(session, { type: "step", aop_id: aop.id, step, title: s.title });
   }
 
   private async callModel(session: Session): Promise<Msg> {
@@ -282,4 +277,13 @@ export function decideRefund(session: Session, refundId: string, approve: boolea
     session.handoffTicket = null;
   }
   return note;
+}
+
+const STEP_TAG = /<\s*step\s*(\d{1,2})\s*>/gi;
+
+/** Remove every <step N> tag from a reply; return the last N (the step the message ends on). */
+export function extractStepTag(text: string): { text: string; step: number | null } {
+  let step: number | null = null;
+  for (const m of text.matchAll(STEP_TAG)) step = Number(m[1]);
+  return { text: text.replace(STEP_TAG, "").replace(/[ \t]+\n/g, "\n").trim(), step };
 }

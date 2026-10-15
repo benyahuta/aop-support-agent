@@ -159,7 +159,7 @@ export function renderForAgent(aop: CompiledAop): string {
     lines.push("", "Policies:");
     for (const p of aop.policies) lines.push(`- ${p}`);
   }
-  lines.push("", `Tools available in this procedure: ${aop.tools.join(", ")}. Pass aop_step with every action tool call.`);
+  lines.push("", `Tools available in this procedure: ${aop.tools.join(", ")}. Pass aop_step with every action tool call, and end each customer message with <step N>.`);
   return lines.join("\n");
 }
 

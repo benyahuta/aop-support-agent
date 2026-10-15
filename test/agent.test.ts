@@ -11,13 +11,13 @@ describe("agent loop", () => {
       [tool("load_procedure", { aop_id: "refund_request" }), verify],
       [tool("lookup_order", { order_id: "LP-1001", aop_step: 2 })],
       [tool("issue_refund", { order_id: "LP-1001", items: [{ sku: "CMP-MUG-12", qty: 1 }], reason: "damaged", description: "mug cracked", aop_step: 5 })],
-      [say("Done, Maya: $24.00 is on its way back to your card.")],
+      [say("Done, Maya: $24.00 is on its way back to your card. <step 6>")],
     ]);
     const agent = new SupportAgent({ model, config: { model: "claude-opus-5-5" } });
     const s = newSession("a1");
     const r = await agent.respond(s, "My mug from LP-1001 arrived cracked. Email maya.chen@example.com");
 
-    expect(r.reply).toMatch(/\$24/);
+    expect(r.reply).toBe("Done, Maya: $24.00 is on its way back to your card.");
     expect(s.world.refunds("LP-1001")).toMatchObject([{ amount: 24, status: "issued" }]);
     const types = r.events.map((e) => e.type);
     expect(types).toContain("procedure_loaded");
@@ -215,17 +215,34 @@ describe("agent loop", () => {
     expect(model.requests).toHaveLength(0);
   });
 
-  it("moves the step tracker to the closing step after the final action succeeds", async () => {
+  it("tracks tool-less steps from the <step N> tag and strips it from the reply", async () => {
+    // The order-status chat from user testing: nothing to do after the lookup,
+    // so only the agent's tag can move the tracker to "Close".
     const model = scriptedModel([
-      [tool("load_procedure", { aop_id: "refund_request" }), verify],
-      [tool("lookup_order", { order_id: "LP-1001", aop_step: 2 })],
-      [tool("issue_refund", { order_id: "LP-1001", items: [{ sku: "CMP-MUG-12", qty: 1 }], reason: "damaged", description: "mug cracked", aop_step: 5 })],
-      [say("Done: $24.")],
+      [tool("load_procedure", { aop_id: "order_status" }), tool("verify_identity", { email: "aisha.karim@example.com", order_id: "LP-1011" })],
+      [tool("lookup_order", { order_id: "LP-1011", aop_step: 2 })],
+      [say("It's still processing and usually ships within 2 business days. Anything else? <step 3>")],
+      [say("You're all set, Aisha. Happy trails! <step 5>")],
     ]);
     const agent = new SupportAgent({ model, config: { model: "claude-opus-5-5" } });
     const s = newSession("a15");
-    await agent.respond(s, "mug cracked");
-    expect(s.currentStep).toBe(6);
+    const first = await agent.respond(s, "has LP-1011 shipped? aisha.karim@example.com");
+    expect(first.reply).not.toMatch(/<step/);
+    expect(s.currentStep).toBe(3);
+    const second = await agent.respond(s, "no");
+    expect(second.reply).toBe("You're all set, Aisha. Happy trails!");
+    expect(s.currentStep).toBe(5);
+    expect(second.events.some((e) => e.type === "step" && (e as any).title === "Close")).toBe(true);
+  });
+
+  it("strips step tags but ignores them with no procedure loaded or an unknown step", async () => {
+    const model = scriptedModel([[say("You have 30 days. <step 2>")], [tool("load_procedure", { aop_id: "order_status" })], [say("Sure. < STEP 99 >")]]);
+    const agent = new SupportAgent({ model, config: { model: "claude-opus-5-5" } });
+    const s = newSession("a16");
+    expect((await agent.respond(s, "return window?")).reply).toBe("You have 30 days.");
+    expect(s.currentStep).toBeNull();
+    expect((await agent.respond(s, "where's my order")).reply).toBe("Sure.");
+    expect(s.currentStep).toBeNull();
   });
 
   it("keeps working notes written alongside tool calls out of the customer reply", async () => {

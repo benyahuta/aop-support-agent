@@ -17,7 +17,9 @@ import { newSession, type Session } from "../src/agent/session.ts";
 import { TOOL_NAMES } from "../src/agent/tools.ts";
 import { aopSetHash, loadAops } from "../src/aop/compiler.ts";
 import { AOP_DIR, ROOT, type Effort, type GuardrailMode } from "../src/config.ts";
-import type { RunArtifacts } from "./checks.ts";
+import { replyExcludes, type RunArtifacts } from "./checks.ts";
+
+const GLOBAL_CHECKS = { noStepTag: replyExcludes(/<\s*step/i, "leaks an internal <step> tag") };
 import { evalSpend, judge, nextCustomerMessage } from "./llm.ts";
 import { renderReport } from "./report.ts";
 import { summarize, type TrialResult } from "./summary.ts";
@@ -83,7 +85,8 @@ async function runTrial(s: Scenario, trial: number): Promise<TrialResult> {
   }
 
   const artifacts: RunArtifacts = { session, replies, transcript };
-  const checks = s.checks.map((c) => ({ name: c.name, ...c.run(artifacts) }));
+  // Global check on every scenario: internal step tags must never reach the customer.
+  const checks = [...s.checks, GLOBAL_CHECKS.noStepTag].map((c) => ({ name: c.name, ...c.run(artifacts) }));
   const judged = error || args["no-judge"] ? [] : await judge(args["judge-model"]!, s.description, s.rubric, session);
   const checksPass = checks.every((c) => c.pass);
   const judgePass = judged.every((j) => j.pass);

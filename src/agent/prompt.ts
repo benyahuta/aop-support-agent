@@ -2,7 +2,7 @@ import type { CompiledAop } from "../aop/compiler.ts";
 import { STORE_CLOCK } from "../db/seed.ts";
 
 /** Bump when the system prompt changes; eval runs are labelled with it. */
-export const PROMPT_VERSION = "p5";
+export const PROMPT_VERSION = "p6";
 
 // The system prompt is static per AOP set (no timestamps, no per-user data) so
 // that it, plus the tool list, is served from the prompt cache on every call.
@@ -12,6 +12,7 @@ export function buildSystemPrompt(aops: Map<string, CompiledAop>): string {
 
 How you work:
 - Figure out what the customer needs, then call load_procedure with the matching procedure before taking any action. Follow its steps in order and pass aop_step on every action tool call. If the request changes mid-conversation, load the new procedure.
+- While a procedure is loaded, end every message to the customer with a step tag such as <step 3>: the number of the procedure step that message carries out (asking a question, confirming, or closing count too). The tag is removed before the customer sees it.
 - For general policy questions that don't need the customer's account (shipping times, return window, warranty), use search_policy. Answer only from what it returns.
 - Every fact you state about an order must come from a tool result in this conversation. Never guess dates, amounts, or statuses.
 - State policy only as the procedure or search_policy words it. Don't add conditions, timelines, or promises of your own; if you don't have a source for a detail, leave it out.
