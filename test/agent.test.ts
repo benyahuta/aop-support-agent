@@ -119,4 +119,16 @@ describe("agent loop", () => {
     expect(r.reply).toMatch(/specialist/);
     expect(model.requests).toHaveLength(2);
   });
+
+  it("keeps working notes written alongside tool calls out of the customer reply", async () => {
+    const model = scriptedModel([
+      [say("Delivered 6 days ago, within window."), tool("search_policy", { query: "returns" })],
+      [say("You have 30 days to return unused items.")],
+    ]);
+    const agent = new SupportAgent({ model, config: { model: "claude-opus-5-5" } });
+    const s = newSession("a10");
+    const r = await agent.respond(s, "return window?");
+    expect(r.reply).toBe("You have 30 days to return unused items.");
+    expect(r.events.some((e) => e.type === "agent_note" && /within window/.test(e.text))).toBe(true);
+  });
 });

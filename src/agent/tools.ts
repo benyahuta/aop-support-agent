@@ -40,7 +40,7 @@ export const TOOL_NAMES = new Set(Object.keys(SCHEMAS)) as Set<string>;
 export const MUTATING = new Set<string>(["issue_refund", "create_return", "cancel_order", "update_shipping_address"]);
 
 const stepProp = { type: "integer", description: "The step number of the active procedure that this call carries out." } as const;
-const orderProp = { type: "string", description: "Order number, e.g. LP-1001" } as const;
+const orderProp = { type: "string", description: "Order number as the customer gave it (format: LP- followed by digits)" } as const;
 
 export const TOOL_DEFS: Anthropic.Beta.BetaTool[] = [
   {

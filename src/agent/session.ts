@@ -5,6 +5,7 @@ import { World } from "../db/world.ts";
 export type TraceEvent =
   | { type: "customer_message"; text: string }
   | { type: "agent_message"; text: string }
+  | { type: "agent_note"; text: string }
   | { type: "model_call"; model: string; stop_reason: string | null; latency_ms: number; input_tokens: number; output_tokens: number; cache_read: number; cache_write: number }
   | { type: "procedure_loaded"; aop_id: string; version: number }
   | { type: "step"; aop_id: string; step: number; title: string }

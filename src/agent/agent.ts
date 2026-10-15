@@ -73,7 +73,12 @@ export class SupportAgent {
       // requires replayed history to be append-only.
       session.messages.push({ role: "assistant", content: msg.content });
 
-      for (const b of msg.content) if (b.type === "text" && b.text.trim()) replyParts.push(b.text.trim());
+      // Only the final message of the turn goes to the customer. Text the model
+      // writes alongside tool calls is working notes: kept in the trace for ops.
+      const text = msg.content.filter((b) => b.type === "text").map((b) => (b as Anthropic.Beta.BetaTextBlock).text.trim()).filter(Boolean).join("\n\n");
+      const hasTools = msg.content.some((b) => b.type === "tool_use");
+      if (text && hasTools && msg.stop_reason !== "max_tokens") record(session, { type: "agent_note", text });
+      else if (text) replyParts.push(text);
 
       if (msg.stop_reason === "refusal") {
         this.forceHandoff(session, "safety_or_legal", "Model declined to continue this conversation.");
@@ -92,7 +97,9 @@ export class SupportAgent {
       session.messages.push({ role: "user", content: results });
     }
 
-    let reply = replyParts.join("\n\n") || ((session.status as Session["status"]) === "handoff" ? HANDOFF_REPLY : "Sorry, I didn't catch that. Could you say it another way?");
+    // If the model put its only customer-facing words alongside a tool call, fall back to them.
+    const lastNote = [...session.trace.slice(start)].reverse().find((e) => e.type === "agent_note") as { text: string } | undefined;
+    let reply = replyParts.join("\n\n") || lastNote?.text || ((session.status as Session["status"]) === "handoff" ? HANDOFF_REPLY : "Sorry, I didn't catch that. Could you say it another way?");
     const filtered = filterReply(session, reply);
     if (filtered.redactions.length) {
       record(session, { type: "guardrail", rule: "output_pii", decision: "redact", detail: `Redacted ${filtered.redactions.length} identifier(s) belonging to another customer.` });

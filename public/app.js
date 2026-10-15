@@ -37,8 +37,9 @@ async function send(text) {
     const res = await api(`/api/conversations/${conv.id}/messages`, { method: "POST", body: JSON.stringify({ text }) });
     typing.remove();
     addMsg("agent", res.reply);
+    const wasHandoff = conv.status === "handoff";
     conv = res;
-    if (conv.status === "handoff") addMsg("system", "Conversation handed off to a human specialist");
+    if (conv.status === "handoff" && !wasHandoff) addMsg("system", "Conversation handed off to a human specialist");
   } catch (e) {
     typing.remove();
     addMsg("system", e.message);
@@ -93,6 +94,7 @@ function evLabel(e) {
   switch (e.type) {
     case "customer_message": return ["Customer", e.text];
     case "agent_message": return ["Agent reply", e.text];
+    case "agent_note": return ["Agent working note (not shown to customer)", e.text];
     case "model_call": return [`Model call · ${e.stop_reason}`, `${e.model} · ${e.latency_ms} ms · in ${e.input_tokens} + cache ${e.cache_read} read / ${e.cache_write} write · out ${e.output_tokens}`];
     case "procedure_loaded": return [`Loaded AOP ${e.aop_id} v${e.version}`, ""];
     case "step": return [`AOP step ${e.step}: ${e.title}`, ""];
