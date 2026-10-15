@@ -53,6 +53,13 @@ describe("identity and ownership", () => {
     for (let i = 0; i < 3; i++) execute(s, "verify_identity", { email: "x@example.com", order_id: "LP-1001" });
     expect(rule("verify_identity", { email: "maya.chen@example.com", order_id: "LP-1001" })).toBe("verification_lockout");
   });
+  it("a re-lookup in the confirming turn doesn't block the confirmed action", () => {
+    as("jordan.alvarez@example.com", "LP-1003", "cancel_order");
+    execute(s, "lookup_order", { order_id: "LP-1003" });
+    s.turn += 1;
+    execute(s, "lookup_order", { order_id: "LP-1003" });
+    expect(rule("cancel_order", { order_id: "LP-1003" })).toBe("allow");
+  });
   it("requires a lookup, then confirmation in a later turn, before cancelling", () => {
     as("jordan.alvarez@example.com", "LP-1003", "cancel_order");
     expect(rule("cancel_order", { order_id: "LP-1003" })).toBe("lookup_before_action");
@@ -149,5 +156,14 @@ describe("output filter", () => {
   it("does not redact identifiers the customer typed", () => {
     s.customerText = "is LP-1003 mine?";
     expect(filterReply(s, "I can't share details about LP-1003.").redactions).toHaveLength(0);
+  });
+});
+
+describe("rate-limit keys", async () => {
+  const { ipv6Prefix64 } = await import("../src/net.ts");
+  it("buckets IPv6 clients by /64", () => {
+    expect(ipv6Prefix64("2001:db8:abcd:12:1::5")).toBe("2001:db8:abcd:12::/64");
+    expect(ipv6Prefix64("2001:db8:abcd:12:ffff:1:2:3")).toBe("2001:db8:abcd:12::/64");
+    expect(ipv6Prefix64("2001:db8::1")).toBe("2001:db8:0:0::/64");
   });
 });

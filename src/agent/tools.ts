@@ -174,7 +174,8 @@ export function execute(session: Session, name: ToolName, input: any, opts: { re
     }
     case "lookup_order": {
       const o = w.order(input.order_id)!;
-      session.lookedUp.set(o.id, session.turn);
+      // Keep the first lookup's turn: a re-lookup while the customer confirms must not reset it.
+      if (!session.lookedUp.has(o.id)) session.lookedUp.set(o.id, session.turn);
       return { ok: true, order: orderView(w, o.id) };
     }
     case "list_customer_orders":

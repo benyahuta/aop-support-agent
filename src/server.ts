@@ -1,6 +1,8 @@
 import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
 import Anthropic from "@anthropic-ai/sdk";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import path from "node:path";
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { secureHeaders } from "hono/secure-headers";
@@ -9,6 +11,7 @@ import { newSession, type Session } from "./agent/session.ts";
 import { aopSetHash } from "./aop/compiler.ts";
 import { PROMPT_VERSION } from "./agent/prompt.ts";
 import { SEED, STORE_CLOCK } from "./db/seed.ts";
+import { ipv6Prefix64 } from "./net.ts";
 
 const agent = new SupportAgent();
 if (process.env.NODE_ENV === "production" && agent.cfg.guardrails !== "enforced") {
@@ -30,11 +33,24 @@ const LIMITS = {
   dollarsPerDay: Number(process.env.DAILY_BUDGET_USD ?? 10),
 };
 const hits = new Map<string, number[]>();
-let day = { key: "", messages: 0, dollars: 0 };
+const MAX_IN_FLIGHT = Number(process.env.MAX_IN_FLIGHT ?? 4);
+// Worst case for one turn: 8 calls x 4,096 output tokens at Opus rates, plus input.
+const TURN_RESERVE_USD = 0.75;
+
+// The daily budget survives restarts: Fly stops idle machines, and an
+// in-memory counter would reset each time. STATE_DIR points at a Fly volume.
+const STATE_FILE = process.env.STATE_DIR ? path.join(process.env.STATE_DIR, "budget.json") : null;
+let day = { key: "", messages: 0, dollars: 0, reserved: 0 };
+try { if (STATE_FILE) day = { ...JSON.parse(readFileSync(STATE_FILE, "utf8")), reserved: 0 }; } catch { /* first boot */ }
+function saveDay() {
+  if (!STATE_FILE) return;
+  try { mkdirSync(path.dirname(STATE_FILE), { recursive: true }); writeFileSync(STATE_FILE, JSON.stringify({ key: day.key, messages: day.messages, dollars: day.dollars })); }
+  catch (err) { console.error("could not persist budget", err); }
+}
 
 function today() {
   const key = new Date().toISOString().slice(0, 10);
-  if (key !== day.key) day = { key, messages: 0, dollars: 0 };
+  if (key !== day.key) { day = { key, messages: 0, dollars: 0, reserved: 0 }; saveDay(); }
   return day;
 }
 
@@ -55,8 +71,10 @@ setInterval(() => {
 
 /** Client IP. Only Fly's proxy header is trusted, and only when running on Fly. */
 function clientIp(c: { req: { header(name: string): string | undefined } }): string {
-  return (process.env.FLY_APP_NAME && c.req.header("fly-client-ip")) || "local";
+  const ip = (process.env.FLY_APP_NAME && c.req.header("fly-client-ip")) || "local";
+  return ip.includes(":") ? ipv6Prefix64(ip) : ip;
 }
+
 
 function getSession(id: string): Session | undefined {
   const s = sessions.get(id);
@@ -131,9 +149,12 @@ app.post("/api/conversations/:id/messages", async (c) => {
   if (s.turn >= MAX_TURNS_PER_CONVERSATION) return c.json({ error: "This conversation is at its length limit. Start a new one." }, 429);
   if (busy.has(s.id)) return c.json({ error: "Still working on your last message." }, 409);
   const d = today();
-  if (d.messages >= LIMITS.messagesPerDay || d.dollars >= LIMITS.dollarsPerDay) return c.json({ error: "The demo has hit its daily budget. Please try again tomorrow." }, 429);
+  if (busy.size >= MAX_IN_FLIGHT) return c.json({ error: "The demo is busy right now. Please try again in a few seconds." }, 503);
+  // Reserve worst-case spend up front so concurrent turns can't overshoot the budget.
+  if (d.messages >= LIMITS.messagesPerDay || d.dollars + d.reserved + TURN_RESERVE_USD > LIMITS.dollarsPerDay) return c.json({ error: "The demo has hit its daily budget. Please try again tomorrow." }, 429);
   if (overLimit("msg", clientIp(c), LIMITS.messagesPerIpHour)) return c.json({ error: "You've sent a lot of messages this hour. Please try again a bit later." }, 429);
   d.messages += 1;
+  d.reserved += TURN_RESERVE_USD;
   busy.add(s.id);
   const costBefore = s.usage.cost_usd;
   try {
@@ -146,7 +167,9 @@ app.post("/api/conversations/:id/messages", async (c) => {
       : "Something went wrong on our side. Please try again.";
     return c.json({ error: msg }, 502);
   } finally {
+    d.reserved -= TURN_RESERVE_USD;
     d.dollars += s.usage.cost_usd - costBefore;
+    saveDay();
     busy.delete(s.id);
   }
 });
@@ -159,6 +182,7 @@ app.post("/api/conversations/:id/refunds/:refundId", async (c) => {
   if (!OPS_APPROVAL_ENABLED) return c.json({ error: "Ops approval is disabled" }, 403);
   const s = getSession(c.req.param("id"));
   if (!s) return c.json({ error: "not found" }, 404);
+  if (busy.has(s.id)) return c.json({ error: "The agent is mid-turn; try again in a moment." }, 409);
   const body = (await c.req.json().catch(() => null)) ?? {};
   const note = decideRefund(s, c.req.param("refundId"), body.decision === "approve", "ops-demo");
   if (!note) return c.json({ error: "No pending refund with that id" }, 400);

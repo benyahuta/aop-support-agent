@@ -41,8 +41,8 @@ const PRICES: Record<string, [number, number, number, number]> = {
 };
 
 export function costUsd(model: string, u: { input_tokens: number; output_tokens: number; cache_read: number; cache_write: number }): number {
-  const p = PRICES[model];
-  if (!p) return 0;
+  // Unknown model (e.g. a server-side fallback): price it at the most expensive known rate.
+  const p = PRICES[model] ?? Object.values(PRICES).reduce((a, b) => (b[1] > a[1] ? b : a));
   return (u.input_tokens * p[0] + u.output_tokens * p[1] + u.cache_read * p[2] + u.cache_write * p[3]) / 1e6;
 }
 

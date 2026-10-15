@@ -9,6 +9,10 @@ primary_region = "iad"
   RATE_PER_IP_HOUR = "40"
   RATE_GLOBAL_DAY = "600"
 
+[mounts]
+  source = "lp_data"
+  destination = "/data"
+
 [http_service]
   internal_port = 8080
   force_https = true
